@@ -1491,7 +1491,7 @@ body.cafe-theme-jungle #cafe-live-panel .cafe-timer-card{background:linear-gradi
 </div>
 
 <!-- ══════════ MAIN APP ══════════ -->
-<div id="main-app" style="display:none">
+<div id="main-app" style="display:block">
 
 <header class="hdr">
 <div class="hdr-top">
@@ -7858,7 +7858,7 @@ function rlAddBook(title,author,genre){
   renderBookList(); // refresh to show "In Log"
 }
 
-// Boot is deferred — Firebase auth calls window._luminaryBoot() once signed in
+// Boot immediately from localStorage — no login wall
 window._luminaryBoot = function() {
   loadState();
   loadDayJournalData();
@@ -7867,6 +7867,8 @@ window._luminaryBoot = function() {
   renderLoginScreen();
   if(students.length===1){ loginAsStudent(students[0].id); }
 };
+// Boot right away without waiting for Firebase
+window._luminaryBoot();
 </script>
 
 <script>
@@ -8468,8 +8470,8 @@ function renderAfternoonPanel(){
 .fb-auth-reset a:hover{color:#E8A882;}
 </style>
 
-<!-- Auth gate — shown before everything else -->
-<div id="fb-auth-screen">
+<!-- Auth gate — hidden by default, shown only when user wants to manage account -->
+<div id="fb-auth-screen" class="hidden">
   <div class="fb-auth-box">
     <div class="fb-auth-logo">🏡 Luminary</div>
     <div class="fb-auth-sub">Home Academy · Kenya</div>
@@ -8690,25 +8692,19 @@ function patchSaveFunctions() {
   };
 }
 
-// ── Auth state listener — drives everything ──
+// ── Auth state listener — silent background sync only ──
 onAuthStateChanged(auth, async user => {
   const authScreen = document.getElementById('fb-auth-screen');
   const btn = document.getElementById('fb-auth-btn');
-  btn.textContent = _isSignUp ? 'Create Account' : 'Sign In';
-  btn.disabled = false;
+  if (btn) { btn.textContent = _isSignUp ? 'Create Account' : 'Sign In'; btn.disabled = false; }
 
   if (user) {
-    // ── Signed in ──
+    // ── Signed in — sync in background, app already running ──
     _uid = user.uid;
-    authScreen.classList.add('hidden');
+    if (authScreen) authScreen.classList.add('hidden');
 
-    // Pull cloud data first, then boot the app
+    // Pull cloud data and refresh app state silently
     await pullFromFirestore();
-
-    // Boot the app (deferred from inline script)
-    if (typeof window._luminaryBoot === 'function') {
-      window._luminaryBoot();
-    }
 
     if (navigator.onLine) startRealtimeSync();
     window.addEventListener('online', () => { pullFromFirestore(); startRealtimeSync(); });
@@ -8721,22 +8717,32 @@ onAuthStateChanged(auth, async user => {
       if (hdrRight) {
         const soBtn = document.createElement('button');
         soBtn.id = 'fb-signout-btn';
-        soBtn.textContent = 'Sign out';
+        soBtn.textContent = '☁ Synced';
         soBtn.onclick = window.fbSignOut;
         soBtn.style.cssText = 'background:none;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.4);font-family:DM Sans,sans-serif;font-size:.65rem;padding:3px 10px;border-radius:20px;cursor:pointer;white-space:nowrap;';
         hdrRight.appendChild(soBtn);
       }
     }
   } else {
-    // ── Signed out ──
+    // ── Not signed in — app keeps running from localStorage, sync disabled ──
     _uid = null;
     if (_snapshotUnsub) { _snapshotUnsub(); _snapshotUnsub = null; }
-    authScreen.classList.remove('hidden');
-    // Hide the main app
-    const main = document.getElementById('main-app');
-    if (main) main.style.display = 'none';
-    const ls = document.getElementById('login-screen');
-    if (ls) ls.classList.add('hidden');
+    // App stays visible — user can still use it locally
+    // Show a subtle "Sign in to sync" button if not already there
+    if (!document.getElementById('fb-signin-prompt')) {
+      const hdrRight = document.querySelector('.hdr-top');
+      if (hdrRight) {
+        const siBtn = document.createElement('button');
+        siBtn.id = 'fb-signin-prompt';
+        siBtn.textContent = '☁ Sign in to sync';
+        siBtn.onclick = () => {
+          if (authScreen) authScreen.classList.remove('hidden');
+          siBtn.remove();
+        };
+        siBtn.style.cssText = 'background:none;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.35);font-family:DM Sans,sans-serif;font-size:.65rem;padding:3px 10px;border-radius:20px;cursor:pointer;white-space:nowrap;';
+        hdrRight.appendChild(siBtn);
+      }
+    }
   }
 });
 
@@ -8751,11 +8757,8 @@ document.getElementById('fb-email').addEventListener('keydown', e => {
 // ── Guest / local-only mode ──
 window.fbGuestMode = function() {
   const authScreen = document.getElementById('fb-auth-screen');
-  authScreen.classList.add('hidden');
-  // Boot the app without cloud sync
-  if (typeof window._luminaryBoot === 'function') {
-    window._luminaryBoot();
-  }
+  if (authScreen) authScreen.classList.add('hidden');
+  // App is already running from localStorage — nothing else needed
 };
 
 
