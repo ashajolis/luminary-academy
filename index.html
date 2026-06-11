@@ -1499,23 +1499,23 @@ body.cafe-theme-jungle #cafe-live-panel .cafe-timer-card{background:linear-gradi
     <div class="hdr-title">Luminary Home Academy</div>
     <div class="hdr-sub">Cambridge-Aligned · Foundation – Grade 9 · Mastery-Based · Kenya</div>
   </div>
-  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+  <div style="display:flex;align-items:center;gap:8px">
     <button id="pwa-install-btn" onclick="triggerInstall()" style="display:none;align-items:center;gap:6px;background:var(--terra);border:none;border-radius:20px;padding:.35rem .9rem;color:#fff;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:500;cursor:pointer;white-space:nowrap">⬇ Install App</button>
-    <!-- hidden legacy refs kept so existing JS doesn't break -->
+    <!-- hidden legacy elements so existing JS stays intact -->
     <span id="sw-avatar" style="display:none"></span>
-    <span id="sw-name" style="display:none"></span>
-    <span id="sw-grade" style="display:none"></span>
-    <!-- Dual-student switcher pills -->
-    <div id="ds-bar" style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:3px 5px">
-      <div id="ds-pill-0" onclick="dsSwitchTo(0)" title="Switch student" style="display:none;align-items:center;gap:5px;padding:3px 10px 3px 4px;border-radius:18px;cursor:pointer;transition:all .18s;border:1px solid transparent">
-        <span id="ds-av-0" style="font-size:.95rem;width:22px;height:22px;display:flex;align-items:center;justify-content:center">👤</span>
+    <span id="sw-name"   style="display:none"></span>
+    <span id="sw-grade"  style="display:none"></span>
+    <!-- dual-student switcher bar -->
+    <div id="ds-bar" style="display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:22px;padding:3px 5px">
+      <div id="ds-pill-0" onclick="dsSwitchTo(0)" style="display:none;align-items:center;gap:4px;padding:3px 9px 3px 4px;border-radius:16px;cursor:pointer;transition:background .15s,border-color .15s;border:1px solid transparent">
+        <span id="ds-av-0" style="font-size:.95rem;line-height:1">👤</span>
         <span id="ds-nm-0" style="color:#fff;font-size:.74rem;font-weight:500;white-space:nowrap"></span>
       </div>
-      <div id="ds-pill-1" onclick="dsSwitchTo(1)" title="Switch student" style="display:none;align-items:center;gap:5px;padding:3px 10px 3px 4px;border-radius:18px;cursor:pointer;transition:all .18s;border:1px solid transparent">
-        <span id="ds-av-1" style="font-size:.95rem;width:22px;height:22px;display:flex;align-items:center;justify-content:center">👤</span>
+      <div id="ds-pill-1" onclick="dsSwitchTo(1)" style="display:none;align-items:center;gap:4px;padding:3px 9px 3px 4px;border-radius:16px;cursor:pointer;transition:background .15s,border-color .15s;border:1px solid transparent">
+        <span id="ds-av-1" style="font-size:.95rem;line-height:1">👤</span>
         <span id="ds-nm-1" style="color:#fff;font-size:.74rem;font-weight:500;white-space:nowrap"></span>
       </div>
-      <div onclick="showLogin()" title="Manage students" style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;color:rgba(255,255,255,.5);flex-shrink:0">⇅</div>
+      <div onclick="showLogin()" title="Switch / manage students" style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;color:rgba(255,255,255,.45);flex-shrink:0">⇅</div>
     </div>
   </div>
 </div>
@@ -3961,14 +3961,14 @@ function loginAsStudent(id){
   if(!s) return;
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('main-app').style.display='block';
-  // legacy hidden refs
-  const _a=document.getElementById('sw-avatar'); if(_a) _a.textContent=s.avatar;
-  const _n=document.getElementById('sw-name');   if(_n) _n.textContent=s.name;
-  const _g=document.getElementById('sw-grade');
+  // keep legacy hidden refs in sync (some render functions may read them)
+  const _av=document.getElementById('sw-avatar'); if(_av) _av.textContent=s.avatar;
+  const _nm=document.getElementById('sw-name');   if(_nm) _nm.textContent=s.name;
+  const _gr=document.getElementById('sw-grade');
   const mathsG=getStudentGradeForSubject(id,'maths');
   const engG=getStudentGradeForSubject(id,'english');
   const gLabel=mathsG===0?'Foundation':mathsG===engG?`Grade ${mathsG}`:`Maths G${mathsG}/Eng G${engG}`;
-  if(_g) _g.textContent=`Age ${s.age} · ${gLabel}`;
+  if(_gr) _gr.textContent=`Age ${s.age} · ${gLabel}`;
   dsRefreshBar();
   renderToday();
   renderFoundation();
@@ -3976,44 +3976,43 @@ function loginAsStudent(id){
   render();
 }
 
-// ═══════════════════════════════════════════════
-//  DUAL-STUDENT SWITCHER
-// ═══════════════════════════════════════════════
-var _dsPinned = [];   // up to 2 student IDs pinned in header
+// ── Dual-student switcher ─────────────────────────────────────────────────
+var _dsPinned = []; // up to 2 pinned student IDs
 
 function dsRefreshBar() {
-  // Ensure current student is always pinned
-  if (!_dsPinned.includes(currentStudentId)) {
-    _dsPinned = [currentStudentId].concat(_dsPinned.filter(function(id){ return id !== currentStudentId; })).slice(0,2);
+  // ensure current student is always in slot 0
+  if (_dsPinned[0] !== currentStudentId) {
+    _dsPinned = _dsPinned.filter(function(id){ return id !== currentStudentId; });
+    _dsPinned.unshift(currentStudentId);
+    _dsPinned = _dsPinned.slice(0,2);
   }
-  // Auto-fill second slot from students list if only 1 pinned
+  // auto-fill slot 1 with the next available student
   if (_dsPinned.length < 2 && students.length >= 2) {
     var other = students.find(function(s){ return s.id !== _dsPinned[0]; });
     if (other) _dsPinned.push(other.id);
   }
-  // Render pills
+  // render pills
   for (var i = 0; i < 2; i++) {
     var pill = document.getElementById('ds-pill-' + i);
-    var av   = document.getElementById('ds-av-' + i);
-    var nm   = document.getElementById('ds-nm-' + i);
+    var avEl = document.getElementById('ds-av-' + i);
+    var nmEl = document.getElementById('ds-nm-' + i);
     if (!pill) continue;
     var sid = _dsPinned[i];
     if (!sid) { pill.style.display = 'none'; continue; }
     var st = students.find(function(s){ return s.id === sid; });
-    if (!st) { pill.style.display = 'none'; continue; }
-    pill.style.display = 'flex';
-    av.textContent = st.avatar;
-    nm.textContent = st.name;
-    var active = sid === currentStudentId;
-    pill.style.background = active ? 'rgba(196,98,45,.35)' : 'transparent';
-    pill.style.borderColor = active ? 'rgba(196,98,45,.55)' : 'transparent';
+    if (!st)  { pill.style.display = 'none'; continue; }
+    pill.style.display     = 'flex';
+    avEl.textContent       = st.avatar;
+    nmEl.textContent       = st.name;
+    var active             = sid === currentStudentId;
+    pill.style.background  = active ? 'rgba(196,98,45,.35)' : 'rgba(255,255,255,.05)';
+    pill.style.borderColor = active ? 'rgba(196,98,45,.5)'  : 'transparent';
   }
 }
 
 window.dsSwitchTo = function(idx) {
   var sid = _dsPinned[idx];
-  if (!sid || sid === currentStudentId) return;
-  loginAsStudent(sid);
+  if (sid && sid !== currentStudentId) loginAsStudent(sid);
 };
 
 function showAddStudent(){
@@ -7915,11 +7914,14 @@ window._luminaryBoot = function() {
   loadDayJournalData();
   loadWkData();
   restoreControls();
-  // Pre-populate dual-student pins with first 2 students
+  // seed dual-student pins with first 2 students
   _dsPinned = students.slice(0,2).map(function(s){ return s.id; });
   renderLoginScreen();
-  if(students.length===1){ loginAsStudent(students[0].id); }
-  else if(students.length>=2){ dsRefreshBar(); }
+  if(students.length === 1) {
+    loginAsStudent(students[0].id);
+  } else if (students.length >= 2 && currentStudentId) {
+    dsRefreshBar();
+  }
 };
 </script>
 
@@ -8546,55 +8548,55 @@ function renderAfternoonPanel(){
   </div>
 </div>
 
-<!-- Firebase compat SDKs — work as regular scripts, no server required -->
+<!-- Firebase compat SDKs — work as plain <script> tags, no server needed -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
-(function() {
+(function () {
   'use strict';
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBf_oyWXDVwex9UWTbL4SE84gJ0iuUGG_s",
-    authDomain: "homeschooling-fec10.firebaseapp.com",
-    projectId: "homeschooling-fec10",
-    storageBucket: "homeschooling-fec10.firebasestorage.app",
+  var firebaseConfig = {
+    apiKey:            "AIzaSyBf_oyWXDVwex9UWTbL4SE84gJ0iuUGG_s",
+    authDomain:        "homeschooling-fec10.firebaseapp.com",
+    projectId:         "homeschooling-fec10",
+    storageBucket:     "homeschooling-fec10.firebasestorage.app",
     messagingSenderId: "195622446396",
-    appId: "1:195622446396:web:fa80c3f13ae1ef7429ea39"
+    appId:             "1:195622446396:web:fa80c3f13ae1ef7429ea39"
   };
 
-  const fbApp = firebase.initializeApp(firebaseConfig);
-  const db    = firebase.firestore();
-  const auth  = firebase.auth();
+  firebase.initializeApp(firebaseConfig);
+  var db   = firebase.firestore();
+  var auth = firebase.auth();
 
-  const SYNC_KEYS = [
+  var SYNC_KEYS = [
     'hls_v4','lum_lprog','lum_dayjournal','lum_weekplanner',
     'lum_lessonedits','lum_plannotes','lum_aft_pinned',
     'lum_schoolMode','lum_cyclePhase','lum_controlsDay'
   ];
 
-  let _uid = null;
-  let _syncDebounce = null;
-  let _ignoreNextSnapshot = false;
-  let _isSignUp = false;
-  let _snapshotUnsub = null;
-  let _booted = false;
+  var _uid              = null;
+  var _syncDebounce     = null;
+  var _ignoreNextSnap   = false;
+  var _isSignUp         = false;
+  var _snapshotUnsub    = null;
+  var _appBooted        = false;
 
-  // ── Auth UI helpers ──
-  window.fbToggleMode = function() {
+  // ── Auth UI helpers ──────────────────────────────────────
+  window.fbToggleMode = function () {
     _isSignUp = !_isSignUp;
     document.getElementById('fb-auth-btn').textContent = _isSignUp ? 'Create Account' : 'Sign In';
     document.getElementById('fb-auth-toggle').innerHTML = _isSignUp
       ? 'Already have an account? <a onclick="fbToggleMode()">Sign in</a>'
-      : 'Don\'t have an account? <a onclick="fbToggleMode()">Create one</a>';
+      : "Don't have an account? <a onclick="fbToggleMode()">Create one</a>";
     document.getElementById('fb-auth-err').textContent = '';
   };
 
-  window.fbSubmit = async function() {
-    const email = document.getElementById('fb-email').value.trim();
-    const pass  = document.getElementById('fb-password').value;
-    const errEl = document.getElementById('fb-auth-err');
-    const btn   = document.getElementById('fb-auth-btn');
+  window.fbSubmit = async function () {
+    var email = document.getElementById('fb-email').value.trim();
+    var pass  = document.getElementById('fb-password').value;
+    var errEl = document.getElementById('fb-auth-err');
+    var btn   = document.getElementById('fb-auth-btn');
     if (!email || !pass) { errEl.textContent = 'Please enter your email and password.'; return; }
     btn.textContent = '…'; btn.disabled = true; errEl.textContent = '';
     try {
@@ -8603,79 +8605,85 @@ function renderAfternoonPanel(){
       } else {
         await auth.signInWithEmailAndPassword(email, pass);
       }
-    } catch(e) {
+    } catch (e) {
       btn.textContent = _isSignUp ? 'Create Account' : 'Sign In';
       btn.disabled = false;
-      const msgs = {
+      var msgs = {
         'auth/user-not-found':      'No account found with that email.',
         'auth/wrong-password':      'Incorrect password.',
         'auth/invalid-email':       'Please enter a valid email address.',
         'auth/email-already-in-use':'An account with this email already exists.',
         'auth/weak-password':       'Password must be at least 6 characters.',
         'auth/invalid-credential':  'Incorrect email or password.',
-        'auth/too-many-requests':   'Too many attempts. Please try again later.',
+        'auth/too-many-requests':   'Too many attempts. Please try again later.'
       };
       errEl.textContent = msgs[e.code] || 'Something went wrong. Please try again.';
     }
   };
 
-  window.fbResetPassword = async function() {
-    const email = document.getElementById('fb-email').value.trim();
-    const errEl = document.getElementById('fb-auth-err');
+  window.fbResetPassword = async function () {
+    var email = document.getElementById('fb-email').value.trim();
+    var errEl = document.getElementById('fb-auth-err');
     if (!email) { errEl.textContent = 'Enter your email above first.'; return; }
     try {
       await auth.sendPasswordResetEmail(email);
       errEl.style.color = '#69f0ae';
       errEl.textContent = 'Reset email sent — check your inbox.';
-      setTimeout(() => { errEl.style.color = ''; errEl.textContent = ''; }, 5000);
-    } catch(e) {
+      setTimeout(function () { errEl.style.color = ''; errEl.textContent = ''; }, 5000);
+    } catch (e) {
       errEl.textContent = 'Could not send reset email. Check the address.';
     }
   };
 
-  window.fbSignOut = async function() {
+  window.fbSignOut = async function () {
     if (!confirm('Sign out of Luminary?')) return;
     if (_snapshotUnsub) _snapshotUnsub();
     await auth.signOut();
   };
 
-  // ── Sync indicator ──
+  // ── Sync status indicator ────────────────────────────────
   function showSyncStatus(state) {
-    let el = document.getElementById('fb-sync-status');
+    var el = document.getElementById('fb-sync-status');
     if (!el) {
       el = document.createElement('div');
       el.id = 'fb-sync-status';
       el.style.cssText = 'position:fixed;bottom:72px;right:12px;font-size:.65rem;font-family:DM Sans,sans-serif;padding:3px 10px;border-radius:10px;z-index:9999;pointer-events:none;transition:opacity .4s;border:1px solid rgba(255,255,255,.12)';
       document.body.appendChild(el);
     }
+    el.style.opacity = '1';
     if (state === 'saving') {
-      el.style.cssText += ';background:rgba(61,43,31,.85);color:rgba(250,247,242,.7);opacity:1';
+      el.style.background = 'rgba(61,43,31,.85)'; el.style.color = 'rgba(250,247,242,.7)';
       el.textContent = '☁ Saving…';
     } else if (state === 'saved') {
-      el.style.cssText += ';background:rgba(44,74,53,.85);color:rgba(250,247,242,.8);opacity:1';
+      el.style.background = 'rgba(44,74,53,.85)'; el.style.color = 'rgba(250,247,242,.8)';
       el.textContent = '✓ Synced';
-      setTimeout(() => { el.style.opacity = '0'; }, 2000);
+      setTimeout(function () { el.style.opacity = '0'; }, 2000);
     } else if (state === 'error') {
-      el.style.cssText += ';background:rgba(180,60,40,.85);color:#fff;opacity:1';
+      el.style.background = 'rgba(180,60,40,.85)'; el.style.color = '#fff';
       el.textContent = '⚠ Sync error';
-      setTimeout(() => { el.style.opacity = '0'; }, 4000);
+      setTimeout(function () { el.style.opacity = '0'; }, 4000);
     }
   }
 
-  // ── Firestore helpers ──
-  function userDocRef() { return db.collection('luminary_users').doc(_uid); }
+  // ── Firestore helpers ────────────────────────────────────
+  function userDocRef() {
+    return db.collection('luminary_users').doc(_uid);
+  }
 
   async function pushToFirestore() {
     if (!navigator.onLine || !_uid) return;
     try {
       showSyncStatus('saving');
-      const data = {};
-      SYNC_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
+      var data = {};
+      SYNC_KEYS.forEach(function (k) {
+        var v = localStorage.getItem(k);
+        if (v !== null) data[k] = v;
+      });
       data._updatedAt = Date.now();
-      _ignoreNextSnapshot = true;
+      _ignoreNextSnap = true;
       await userDocRef().set(data);
       showSyncStatus('saved');
-    } catch(e) {
+    } catch (e) {
       console.warn('[Firebase] push failed', e);
       showSyncStatus('error');
     }
@@ -8684,37 +8692,37 @@ function renderAfternoonPanel(){
   async function pullFromFirestore() {
     if (!navigator.onLine || !_uid) return;
     try {
-      const snap = await userDocRef().get();
+      var snap = await userDocRef().get();
       if (!snap.exists) return;
-      applyData(snap.data());
-    } catch(e) {
+      applyCloudData(snap.data());
+    } catch (e) {
       console.warn('[Firebase] pull failed', e);
     }
   }
 
-  function applyData(data) {
-    let changed = false;
-    SYNC_KEYS.forEach(k => {
+  function applyCloudData(data) {
+    var changed = false;
+    SYNC_KEYS.forEach(function (k) {
       if (data[k] !== undefined && localStorage.getItem(k) !== data[k]) {
         Object.getPrototypeOf(localStorage).setItem.call(localStorage, k, data[k]);
         changed = true;
       }
     });
     if (!changed) return;
-    if (typeof loadState === 'function') loadState();
+    if (typeof loadState          === 'function') loadState();
     if (typeof loadDayJournalData === 'function') loadDayJournalData();
-    if (typeof loadWkData === 'function') loadWkData();
-    if (typeof restoreControls === 'function') restoreControls();
-    if (typeof renderLoginScreen === 'function') renderLoginScreen();
+    if (typeof loadWkData         === 'function') loadWkData();
+    if (typeof restoreControls    === 'function') restoreControls();
+    if (typeof renderLoginScreen  === 'function') renderLoginScreen();
     showSyncStatus('saved');
   }
 
   function startRealtimeSync() {
     if (_snapshotUnsub) _snapshotUnsub();
-    _snapshotUnsub = userDocRef().onSnapshot(snap => {
+    _snapshotUnsub = userDocRef().onSnapshot(function (snap) {
       if (!snap.exists) return;
-      if (_ignoreNextSnapshot) { _ignoreNextSnapshot = false; return; }
-      applyData(snap.data());
+      if (_ignoreNextSnap) { _ignoreNextSnap = false; return; }
+      applyCloudData(snap.data());
     });
   }
 
@@ -8723,50 +8731,54 @@ function renderAfternoonPanel(){
     _syncDebounce = setTimeout(pushToFirestore, 1500);
   }
 
-  let _patched = false;
+  var _patched = false;
   function patchSaveFunctions() {
     if (_patched) return; _patched = true;
-    ['saveState','saveLessonProgress','saveWkData','savePlanNotesStore'].forEach(name => {
+    ['saveState','saveLessonProgress','saveWkData','savePlanNotesStore'].forEach(function (name) {
       if (typeof window[name] === 'function') {
-        const orig = window[name];
-        window[name] = function(...a) { orig.apply(this,a); debouncedPush(); };
+        var orig = window[name];
+        window[name] = function () { orig.apply(this, arguments); debouncedPush(); };
       }
     });
-    const _origSetItem = localStorage.setItem.bind(localStorage);
-    localStorage.setItem = function(key, value) {
-      _origSetItem(key, value);
-      if (SYNC_KEYS.includes(key)) debouncedPush();
+    var _origSet = localStorage.setItem.bind(localStorage);
+    localStorage.setItem = function (key, value) {
+      _origSet(key, value);
+      if (SYNC_KEYS.indexOf(key) !== -1) debouncedPush();
     };
   }
 
   function bootApp() {
-    if (_booted) return;
-    _booted = true;
+    if (_appBooted) return;
+    _appBooted = true;
     if (typeof window._luminaryBoot === 'function') window._luminaryBoot();
   }
 
-  // ── Auth state listener ──
-  auth.onAuthStateChanged(async function(user) {
-    const authScreen = document.getElementById('fb-auth-screen');
-    const btn = document.getElementById('fb-auth-btn');
+  // ── Auth state — drives the whole app ───────────────────
+  auth.onAuthStateChanged(async function (user) {
+    var authScreen = document.getElementById('fb-auth-screen');
+    var btn        = document.getElementById('fb-auth-btn');
     if (btn) { btn.textContent = _isSignUp ? 'Create Account' : 'Sign In'; btn.disabled = false; }
 
     if (user) {
       _uid = user.uid;
       if (authScreen) authScreen.classList.add('hidden');
+
       await pullFromFirestore();
       bootApp();
+
       if (navigator.onLine) startRealtimeSync();
-      window.addEventListener('online', () => { pullFromFirestore(); startRealtimeSync(); });
+      window.addEventListener('online', function () { pullFromFirestore(); startRealtimeSync(); });
       patchSaveFunctions();
+
+      // Add sign-out button to header (once)
       if (!document.getElementById('fb-signout-btn')) {
-        const hdrRight = document.querySelector('.hdr-top');
+        var hdrRight = document.querySelector('.hdr-top');
         if (hdrRight) {
-          const soBtn = document.createElement('button');
+          var soBtn = document.createElement('button');
           soBtn.id = 'fb-signout-btn';
           soBtn.textContent = 'Sign out';
           soBtn.onclick = window.fbSignOut;
-          soBtn.style.cssText = 'background:none;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.4);font-family:DM Sans,sans-serif;font-size:.65rem;padding:3px 10px;border-radius:20px;cursor:pointer;white-space:nowrap;';
+          soBtn.style.cssText = 'background:none;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.4);font-family:DM Sans,sans-serif;font-size:.65rem;padding:3px 10px;border-radius:20px;cursor:pointer;white-space:nowrap';
           hdrRight.appendChild(soBtn);
         }
       }
@@ -8774,29 +8786,30 @@ function renderAfternoonPanel(){
       _uid = null;
       if (_snapshotUnsub) { _snapshotUnsub(); _snapshotUnsub = null; }
       if (authScreen) authScreen.classList.remove('hidden');
-      const main = document.getElementById('main-app');
+      var main = document.getElementById('main-app');
       if (main) main.style.display = 'none';
-      const ls = document.getElementById('login-screen');
+      var ls = document.getElementById('login-screen');
       if (ls) ls.classList.add('hidden');
+      _appBooted = false; // allow re-boot on next sign-in
     }
   });
 
-  // Enter key support
-  document.addEventListener('DOMContentLoaded', function() {
-    const pw = document.getElementById('fb-password');
-    const em = document.getElementById('fb-email');
-    if (pw) pw.addEventListener('keydown', e => { if (e.key==='Enter') window.fbSubmit(); });
-    if (em) em.addEventListener('keydown', e => { if (e.key==='Enter') { const p=document.getElementById('fb-password'); if(p) p.focus(); } });
+  // Enter-key shortcuts on auth form
+  document.addEventListener('DOMContentLoaded', function () {
+    var pw = document.getElementById('fb-password');
+    var em = document.getElementById('fb-email');
+    if (pw) pw.addEventListener('keydown', function (e) { if (e.key === 'Enter') window.fbSubmit(); });
+    if (em) em.addEventListener('keydown', function (e) { if (e.key === 'Enter') { var p = document.getElementById('fb-password'); if (p) p.focus(); } });
   });
 
-  // Guest / local-only mode
-  window.fbGuestMode = function() {
-    const authScreen = document.getElementById('fb-auth-screen');
+  // ── Guest / offline mode ─────────────────────────────────
+  window.fbGuestMode = function () {
+    var authScreen = document.getElementById('fb-auth-screen');
     if (authScreen) authScreen.classList.add('hidden');
     bootApp();
   };
 
-})();
+}());
 </script>
 
 <script>
