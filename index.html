@@ -79,12 +79,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--bark);
 .sw-avatar{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem}
 .sw-name{color:#fff;font-size:.78rem;font-weight:500}
 .sw-grade{color:var(--bark-lt);font-size:.68rem}
-/* Dual-student pills */
-.ds-pill{display:flex;align-items:center;gap:5px;padding:3px 10px 3px 5px;border-radius:18px;cursor:pointer;transition:all .18s;border:1px solid transparent}
-.ds-pill:hover{background:rgba(255,255,255,.12)}
-.ds-pill.ds-pill-active{background:rgba(196,98,45,.35);border-color:rgba(196,98,45,.5)}
-.ds-av{font-size:1rem;width:22px;height:22px;display:flex;align-items:center;justify-content:center}
-.ds-nm{color:#fff;font-size:.75rem;font-weight:500;white-space:nowrap}
 .tab-bar{display:flex;gap:0;overflow-x:auto;margin:0 -1.5rem;padding:0 1.5rem;margin-top:.4rem}
 .tab-btn{padding:.6rem 1.1rem;border:none;background:transparent;color:rgba(255,255,255,.5);font-family:'DM Sans',sans-serif;font-size:.73rem;font-weight:500;cursor:pointer;transition:all .15s;border-bottom:2px solid transparent;white-space:nowrap;flex-shrink:0}
 .tab-btn:hover{color:#fff}
@@ -1507,17 +1501,21 @@ body.cafe-theme-jungle #cafe-live-panel .cafe-timer-card{background:linear-gradi
   </div>
   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
     <button id="pwa-install-btn" onclick="triggerInstall()" style="display:none;align-items:center;gap:6px;background:var(--terra);border:none;border-radius:20px;padding:.35rem .9rem;color:#fff;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:500;cursor:pointer;white-space:nowrap">⬇ Install App</button>
-    <!-- Dual-student switcher bar -->
-    <div id="dual-student-bar" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:4px 6px">
-      <div id="ds-pill-1" class="ds-pill ds-pill-active" onclick="dsSwitchTo(0)" title="Switch to first student">
-        <span class="ds-av" id="ds-av-1">👤</span>
-        <span class="ds-nm" id="ds-nm-1">—</span>
+    <!-- hidden legacy refs kept so existing JS doesn't break -->
+    <span id="sw-avatar" style="display:none"></span>
+    <span id="sw-name" style="display:none"></span>
+    <span id="sw-grade" style="display:none"></span>
+    <!-- Dual-student switcher pills -->
+    <div id="ds-bar" style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:3px 5px">
+      <div id="ds-pill-0" onclick="dsSwitchTo(0)" title="Switch student" style="display:none;align-items:center;gap:5px;padding:3px 10px 3px 4px;border-radius:18px;cursor:pointer;transition:all .18s;border:1px solid transparent">
+        <span id="ds-av-0" style="font-size:.95rem;width:22px;height:22px;display:flex;align-items:center;justify-content:center">👤</span>
+        <span id="ds-nm-0" style="color:#fff;font-size:.74rem;font-weight:500;white-space:nowrap"></span>
       </div>
-      <div id="ds-pill-2" class="ds-pill" onclick="dsSwitchTo(1)" title="Switch to second student" style="display:none">
-        <span class="ds-av" id="ds-av-2">👤</span>
-        <span class="ds-nm" id="ds-nm-2">—</span>
+      <div id="ds-pill-1" onclick="dsSwitchTo(1)" title="Switch student" style="display:none;align-items:center;gap:5px;padding:3px 10px 3px 4px;border-radius:18px;cursor:pointer;transition:all .18s;border:1px solid transparent">
+        <span id="ds-av-1" style="font-size:.95rem;width:22px;height:22px;display:flex;align-items:center;justify-content:center">👤</span>
+        <span id="ds-nm-1" style="color:#fff;font-size:.74rem;font-weight:500;white-space:nowrap"></span>
       </div>
-      <div id="ds-add-btn" onclick="showLogin()" title="Add / manage students" style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.75rem;color:rgba(255,255,255,.4);transition:all .15s" onmouseover="this.style.background='rgba(255,255,255,.15)'" onmouseout="this.style.background='rgba(255,255,255,.08)'">⇅</div>
+      <div onclick="showLogin()" title="Manage students" style="width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem;color:rgba(255,255,255,.5);flex-shrink:0">⇅</div>
     </div>
   </div>
 </div>
@@ -3963,80 +3961,60 @@ function loginAsStudent(id){
   if(!s) return;
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('main-app').style.display='block';
-  // legacy single-switcher refs (kept for any other code that reads them)
-  const _swAv=document.getElementById('sw-avatar'); if(_swAv) _swAv.textContent=s.avatar;
-  const _swNm=document.getElementById('sw-name'); if(_swNm) _swNm.textContent=s.name;
+  // legacy hidden refs
+  const _a=document.getElementById('sw-avatar'); if(_a) _a.textContent=s.avatar;
+  const _n=document.getElementById('sw-name');   if(_n) _n.textContent=s.name;
+  const _g=document.getElementById('sw-grade');
   const mathsG=getStudentGradeForSubject(id,'maths');
   const engG=getStudentGradeForSubject(id,'english');
   const gLabel=mathsG===0?'Foundation':mathsG===engG?`Grade ${mathsG}`:`Maths G${mathsG}/Eng G${engG}`;
-  const _swGr=document.getElementById('sw-grade'); if(_swGr) _swGr.textContent=`Age ${s.age} · ${gLabel}`;
-  dsUpdateBar();
+  if(_g) _g.textContent=`Age ${s.age} · ${gLabel}`;
+  dsRefreshBar();
   renderToday();
   renderFoundation();
   buildToc();
   render();
 }
 
-// ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════
 //  DUAL-STUDENT SWITCHER
-// ═══════════════════════════════════════════════════════════
-// Tracks up to 2 pinned students for quick switching
-let dsPinned = []; // array of up to 2 student IDs
+// ═══════════════════════════════════════════════
+var _dsPinned = [];   // up to 2 student IDs pinned in header
 
-function dsUpdateBar(){
-  // Rebuild the pinned list: always include currentStudentId as first.
-  // Keep the second slot if it was already set and is different.
-  if(!dsPinned.includes(currentStudentId)){
-    dsPinned = [currentStudentId, ...(dsPinned.filter(id=>id!==currentStudentId))].slice(0,2);
+function dsRefreshBar() {
+  // Ensure current student is always pinned
+  if (!_dsPinned.includes(currentStudentId)) {
+    _dsPinned = [currentStudentId].concat(_dsPinned.filter(function(id){ return id !== currentStudentId; })).slice(0,2);
   }
-  // Populate pills
-  dsPinned.forEach((sid, i)=>{
-    const s = students.find(st=>st.id===sid);
-    if(!s) return;
-    const pill = document.getElementById('ds-pill-'+(i+1));
-    const av   = document.getElementById('ds-av-'+(i+1));
-    const nm   = document.getElementById('ds-nm-'+(i+1));
-    if(!pill) return;
-    pill.style.display='flex';
-    av.textContent = s.avatar;
-    nm.textContent = s.name;
-    pill.classList.toggle('ds-pill-active', sid===currentStudentId);
-  });
-  // Hide pill 2 if only one student pinned
-  if(dsPinned.length < 2){
-    const p2=document.getElementById('ds-pill-2');
-    if(p2) p2.style.display='none';
+  // Auto-fill second slot from students list if only 1 pinned
+  if (_dsPinned.length < 2 && students.length >= 2) {
+    var other = students.find(function(s){ return s.id !== _dsPinned[0]; });
+    if (other) _dsPinned.push(other.id);
   }
-  // If there are students not yet pinned, offer them via login screen
-  // Show a "+ student" add-pill if we have more students than pinned
-  const p2=document.getElementById('ds-pill-2');
-  if(p2 && dsPinned.length<2 && students.length>=2){
-    // Auto-pin the second student
-    const other = students.find(s=>s.id!==currentStudentId);
-    if(other && !dsPinned.includes(other.id)){
-      dsPinned.push(other.id);
-      dsUpdateBar();
-    }
+  // Render pills
+  for (var i = 0; i < 2; i++) {
+    var pill = document.getElementById('ds-pill-' + i);
+    var av   = document.getElementById('ds-av-' + i);
+    var nm   = document.getElementById('ds-nm-' + i);
+    if (!pill) continue;
+    var sid = _dsPinned[i];
+    if (!sid) { pill.style.display = 'none'; continue; }
+    var st = students.find(function(s){ return s.id === sid; });
+    if (!st) { pill.style.display = 'none'; continue; }
+    pill.style.display = 'flex';
+    av.textContent = st.avatar;
+    nm.textContent = st.name;
+    var active = sid === currentStudentId;
+    pill.style.background = active ? 'rgba(196,98,45,.35)' : 'transparent';
+    pill.style.borderColor = active ? 'rgba(196,98,45,.55)' : 'transparent';
   }
 }
 
-window.dsSwitchTo = function(idx){
-  const sid = dsPinned[idx];
-  if(!sid || sid===currentStudentId) return;
+window.dsSwitchTo = function(idx) {
+  var sid = _dsPinned[idx];
+  if (!sid || sid === currentStudentId) return;
   loginAsStudent(sid);
 };
-
-// After login screen renders, auto-pin top 2 students
-const _origRenderLoginScreen = window.renderLoginScreen || renderLoginScreen;
-function renderLoginScreen(){
-  _origRenderLoginScreen();
-  // Auto-populate dsPinned with first 2 students if empty
-  if(dsPinned.length===0 && students.length>0){
-    dsPinned = students.slice(0,2).map(s=>s.id);
-  }
-  // Refresh pills if main app already visible
-  if(currentStudentId) dsUpdateBar();
-}
 
 function showAddStudent(){
   const modal=document.getElementById('add-student-modal');
@@ -7937,12 +7915,11 @@ window._luminaryBoot = function() {
   loadDayJournalData();
   loadWkData();
   restoreControls();
-  // Auto-pin up to 2 students for the dual switcher
-  if(students.length>0) dsPinned = students.slice(0,2).map(s=>s.id);
+  // Pre-populate dual-student pins with first 2 students
+  _dsPinned = students.slice(0,2).map(function(s){ return s.id; });
   renderLoginScreen();
   if(students.length===1){ loginAsStudent(students[0].id); }
-  // If exactly 2 students, pre-populate pills but still show login
-  if(students.length>=2) dsUpdateBar();
+  else if(students.length>=2){ dsRefreshBar(); }
 };
 </script>
 
@@ -8528,7 +8505,6 @@ function renderAfternoonPanel(){
 <style>
 #fb-auth-screen{position:fixed;inset:0;background:#3D2B1F;z-index:99999;display:flex;align-items:center;justify-content:center;padding:1.5rem;font-family:'DM Sans',sans-serif;}
 #fb-auth-screen.hidden{display:none;}
-#fb-loading-msg{text-align:center;color:rgba(250,247,242,.45);font-size:.75rem;margin-top:.8rem;}
 .fb-auth-box{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:2rem 1.8rem;width:100%;max-width:360px;}
 .fb-auth-logo{font-family:'Fraunces',serif;font-size:1.6rem;color:#FAF7F2;text-align:center;margin-bottom:.2rem;}
 .fb-auth-sub{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:#A07858;text-align:center;margin-bottom:1.8rem;}
@@ -8551,8 +8527,6 @@ function renderAfternoonPanel(){
   <div class="fb-auth-box">
     <div class="fb-auth-logo">🏡 Luminary</div>
     <div class="fb-auth-sub">Home Academy · Kenya</div>
-    <div id="fb-loading-msg">⏳ Connecting…</div>
-    <div id="fb-auth-fields" style="display:none">
     <label class="fb-auth-label">Email</label>
     <input class="fb-auth-input" id="fb-email" type="email" placeholder="you@email.com" autocomplete="email">
     <label class="fb-auth-label">Password</label>
@@ -8569,299 +8543,260 @@ function renderAfternoonPanel(){
       </button>
       <div style="font-size:.62rem;color:rgba(250,247,242,.25);margin-top:.4rem">Data stays on this device only — no cloud backup</div>
     </div>
-    </div><!-- /fb-auth-fields -->
   </div>
 </div>
 
-<!-- Fallback: show the login form if Firebase module takes too long or fails -->
+<!-- Firebase compat SDKs — work as regular scripts, no server required -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
-(function(){
-  // Show the sign-in form fields after 1.5s regardless of Firebase state
-  // (Firebase module will still override this if it loads successfully)
-  window._fbFormRevealed = false;
-  function revealAuthForm(){
-    if(window._fbFormRevealed) return;
-    window._fbFormRevealed = true;
-    var msg = document.getElementById('fb-loading-msg');
-    if(msg) msg.style.display = 'none';
-    var fields = document.getElementById('fb-auth-fields');
-    if(fields) fields.style.display = 'block';
-  }
-  setTimeout(revealAuthForm, 1500);
-  window._revealAuthForm = revealAuthForm;
-})();
-</script>
+(function() {
+  'use strict';
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
-import {
-  getAuth, onAuthStateChanged,
-  signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  sendPasswordResetEmail, signOut
-} from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBf_oyWXDVwex9UWTbL4SE84gJ0iuUGG_s",
-  authDomain: "homeschooling-fec10.firebaseapp.com",
-  projectId: "homeschooling-fec10",
-  storageBucket: "homeschooling-fec10.firebasestorage.app",
-  messagingSenderId: "195622446396",
-  appId: "1:195622446396:web:fa80c3f13ae1ef7429ea39",
-  measurementId: "G-PGE96YK8RT"
-};
-
-const fbApp = initializeApp(firebaseConfig);
-const db   = getFirestore(fbApp);
-const auth = getAuth(fbApp);
-
-const SYNC_KEYS = [
-  'hls_v4','lum_lprog','lum_dayjournal','lum_weekplanner',
-  'lum_lessonedits','lum_plannotes','lum_aft_pinned',
-  'lum_schoolMode','lum_cyclePhase','lum_controlsDay'
-];
-
-let _uid = null;
-let _syncDebounce = null;
-let _ignoreNextSnapshot = false;
-let _isSignUp = false;
-let _snapshotUnsub = null;
-
-// Firebase loaded — reveal form immediately
-if(window._revealAuthForm) window._revealAuthForm();
-
-// ── Auth UI helpers ──
-window.fbToggleMode = function() {
-  _isSignUp = !_isSignUp;
-  document.getElementById('fb-auth-btn').textContent = _isSignUp ? 'Create Account' : 'Sign In';
-  document.getElementById('fb-auth-toggle').innerHTML = _isSignUp
-    ? 'Already have an account? <a onclick="fbToggleMode()">Sign in</a>'
-    : "Don't have an account? <a onclick=\"fbToggleMode()\">Create one</a>";
-  document.getElementById('fb-auth-err').textContent = '';
-};
-
-window.fbSubmit = async function() {
-  const email = document.getElementById('fb-email').value.trim();
-  const pass  = document.getElementById('fb-password').value;
-  const errEl = document.getElementById('fb-auth-err');
-  const btn   = document.getElementById('fb-auth-btn');
-  if (!email || !pass) { errEl.textContent = 'Please enter your email and password.'; return; }
-  btn.textContent = '…'; btn.disabled = true; errEl.textContent = '';
-  try {
-    if (_isSignUp) {
-      await createUserWithEmailAndPassword(auth, email, pass);
-    } else {
-      await signInWithEmailAndPassword(auth, email, pass);
-    }
-  } catch(e) {
-    btn.textContent = _isSignUp ? 'Create Account' : 'Sign In';
-    btn.disabled = false;
-    const msgs = {
-      'auth/user-not-found':      'No account found with that email.',
-      'auth/wrong-password':      'Incorrect password.',
-      'auth/invalid-email':       'Please enter a valid email address.',
-      'auth/email-already-in-use':'An account with this email already exists.',
-      'auth/weak-password':       'Password must be at least 6 characters.',
-      'auth/invalid-credential':  'Incorrect email or password.',
-      'auth/too-many-requests':   'Too many attempts. Please try again later.',
-    };
-    errEl.textContent = msgs[e.code] || 'Something went wrong. Please try again.';
-  }
-};
-
-window.fbResetPassword = async function() {
-  const email = document.getElementById('fb-email').value.trim();
-  const errEl = document.getElementById('fb-auth-err');
-  if (!email) { errEl.textContent = 'Enter your email above first.'; return; }
-  try {
-    await sendPasswordResetEmail(auth, email);
-    errEl.style.color = '#69f0ae';
-    errEl.textContent = 'Reset email sent — check your inbox.';
-    setTimeout(() => { errEl.style.color = ''; errEl.textContent = ''; }, 5000);
-  } catch(e) {
-    errEl.textContent = 'Could not send reset email. Check the address.';
-  }
-};
-
-// Allow sign-out from within the app
-window.fbSignOut = async function() {
-  if (!confirm('Sign out of Luminary?')) return;
-  if (_snapshotUnsub) _snapshotUnsub();
-  await signOut(auth);
-};
-
-// ── Sync indicator ──
-function showSyncStatus(state) {
-  let el = document.getElementById('fb-sync-status');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'fb-sync-status';
-    el.style.cssText = 'position:fixed;bottom:72px;right:12px;font-size:.65rem;font-family:DM Sans,sans-serif;padding:3px 10px;border-radius:10px;z-index:9999;pointer-events:none;transition:opacity .4s;border:1px solid rgba(255,255,255,.12)';
-    document.body.appendChild(el);
-  }
-  if (state === 'saving') {
-    el.style.cssText += ';background:rgba(61,43,31,.85);color:rgba(250,247,242,.7);opacity:1';
-    el.textContent = '☁ Saving…';
-  } else if (state === 'saved') {
-    el.style.cssText += ';background:rgba(44,74,53,.85);color:rgba(250,247,242,.8);opacity:1';
-    el.textContent = '✓ Synced';
-    setTimeout(() => { el.style.opacity = '0'; }, 2000);
-  } else if (state === 'error') {
-    el.style.cssText += ';background:rgba(180,60,40,.85);color:#fff;opacity:1';
-    el.textContent = '⚠ Sync error';
-    setTimeout(() => { el.style.opacity = '0'; }, 4000);
-  }
-}
-
-// ── Firestore helpers — scoped to user UID ──
-function userDoc() { return doc(db, 'luminary_users', _uid); }
-
-async function pushToFirestore() {
-  if (!navigator.onLine || !_uid) return;
-  try {
-    showSyncStatus('saving');
-    const data = {};
-    SYNC_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
-    data._updatedAt = Date.now();
-    _ignoreNextSnapshot = true;
-    await setDoc(userDoc(), data);
-    showSyncStatus('saved');
-  } catch(e) {
-    console.warn('[Firebase] push failed', e);
-    showSyncStatus('error');
-  }
-}
-
-async function pullFromFirestore() {
-  if (!navigator.onLine || !_uid) return;
-  try {
-    const snap = await getDoc(userDoc());
-    if (!snap.exists()) return;
-    applyData(snap.data());
-  } catch(e) {
-    console.warn('[Firebase] pull failed', e);
-  }
-}
-
-function applyData(data) {
-  let changed = false;
-  SYNC_KEYS.forEach(k => {
-    if (data[k] !== undefined && localStorage.getItem(k) !== data[k]) {
-      // bypass our patched setItem so we don't trigger another push
-      Object.getPrototypeOf(localStorage).setItem.call(localStorage, k, data[k]);
-      changed = true;
-    }
-  });
-  if (!changed) return;
-  if (typeof loadState === 'function') loadState();
-  if (typeof loadDayJournalData === 'function') loadDayJournalData();
-  if (typeof loadWkData === 'function') loadWkData();
-  if (typeof restoreControls === 'function') restoreControls();
-  if (typeof renderLoginScreen === 'function') renderLoginScreen();
-  showSyncStatus('saved');
-}
-
-function startRealtimeSync() {
-  if (_snapshotUnsub) _snapshotUnsub();
-  _snapshotUnsub = onSnapshot(userDoc(), snap => {
-    if (!snap.exists()) return;
-    if (_ignoreNextSnapshot) { _ignoreNextSnapshot = false; return; }
-    applyData(snap.data());
-  });
-}
-
-function debouncedPush() {
-  clearTimeout(_syncDebounce);
-  _syncDebounce = setTimeout(pushToFirestore, 1500);
-}
-
-// ── Patch save functions once (called after sign-in) ──
-let _patched = false;
-function patchSaveFunctions() {
-  if (_patched) return; _patched = true;
-  ['saveState','saveLessonProgress','saveWkData','savePlanNotesStore'].forEach(name => {
-    if (typeof window[name] === 'function') {
-      const orig = window[name];
-      window[name] = function(...a) { orig.apply(this,a); debouncedPush(); };
-    }
-  });
-  // Intercept all direct localStorage.setItem calls
-  const _origSetItem = localStorage.setItem.bind(localStorage);
-  localStorage.setItem = function(key, value) {
-    _origSetItem(key, value);
-    if (SYNC_KEYS.includes(key)) debouncedPush();
+  const firebaseConfig = {
+    apiKey: "AIzaSyBf_oyWXDVwex9UWTbL4SE84gJ0iuUGG_s",
+    authDomain: "homeschooling-fec10.firebaseapp.com",
+    projectId: "homeschooling-fec10",
+    storageBucket: "homeschooling-fec10.firebasestorage.app",
+    messagingSenderId: "195622446396",
+    appId: "1:195622446396:web:fa80c3f13ae1ef7429ea39"
   };
-}
 
-// ── Auth state listener — drives everything ──
-onAuthStateChanged(auth, async user => {
-  const authScreen = document.getElementById('fb-auth-screen');
-  const btn = document.getElementById('fb-auth-btn');
-  btn.textContent = _isSignUp ? 'Create Account' : 'Sign In';
-  btn.disabled = false;
+  const fbApp = firebase.initializeApp(firebaseConfig);
+  const db    = firebase.firestore();
+  const auth  = firebase.auth();
 
-  if (user) {
-    // ── Signed in ──
-    _uid = user.uid;
-    authScreen.classList.add('hidden');
+  const SYNC_KEYS = [
+    'hls_v4','lum_lprog','lum_dayjournal','lum_weekplanner',
+    'lum_lessonedits','lum_plannotes','lum_aft_pinned',
+    'lum_schoolMode','lum_cyclePhase','lum_controlsDay'
+  ];
 
-    // Pull cloud data first, then boot the app
-    await pullFromFirestore();
+  let _uid = null;
+  let _syncDebounce = null;
+  let _ignoreNextSnapshot = false;
+  let _isSignUp = false;
+  let _snapshotUnsub = null;
+  let _booted = false;
 
-    // Boot the app (deferred from inline script)
-    if (typeof window._luminaryBoot === 'function') {
-      window._luminaryBoot();
-    }
+  // ── Auth UI helpers ──
+  window.fbToggleMode = function() {
+    _isSignUp = !_isSignUp;
+    document.getElementById('fb-auth-btn').textContent = _isSignUp ? 'Create Account' : 'Sign In';
+    document.getElementById('fb-auth-toggle').innerHTML = _isSignUp
+      ? 'Already have an account? <a onclick="fbToggleMode()">Sign in</a>'
+      : 'Don\'t have an account? <a onclick="fbToggleMode()">Create one</a>';
+    document.getElementById('fb-auth-err').textContent = '';
+  };
 
-    if (navigator.onLine) startRealtimeSync();
-    window.addEventListener('online', () => { pullFromFirestore(); startRealtimeSync(); });
-
-    patchSaveFunctions();
-
-    // Add sign-out button to header
-    if (!document.getElementById('fb-signout-btn')) {
-      const hdrRight = document.querySelector('.hdr-top');
-      if (hdrRight) {
-        const soBtn = document.createElement('button');
-        soBtn.id = 'fb-signout-btn';
-        soBtn.textContent = 'Sign out';
-        soBtn.onclick = window.fbSignOut;
-        soBtn.style.cssText = 'background:none;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.4);font-family:DM Sans,sans-serif;font-size:.65rem;padding:3px 10px;border-radius:20px;cursor:pointer;white-space:nowrap;';
-        hdrRight.appendChild(soBtn);
+  window.fbSubmit = async function() {
+    const email = document.getElementById('fb-email').value.trim();
+    const pass  = document.getElementById('fb-password').value;
+    const errEl = document.getElementById('fb-auth-err');
+    const btn   = document.getElementById('fb-auth-btn');
+    if (!email || !pass) { errEl.textContent = 'Please enter your email and password.'; return; }
+    btn.textContent = '…'; btn.disabled = true; errEl.textContent = '';
+    try {
+      if (_isSignUp) {
+        await auth.createUserWithEmailAndPassword(email, pass);
+      } else {
+        await auth.signInWithEmailAndPassword(email, pass);
       }
+    } catch(e) {
+      btn.textContent = _isSignUp ? 'Create Account' : 'Sign In';
+      btn.disabled = false;
+      const msgs = {
+        'auth/user-not-found':      'No account found with that email.',
+        'auth/wrong-password':      'Incorrect password.',
+        'auth/invalid-email':       'Please enter a valid email address.',
+        'auth/email-already-in-use':'An account with this email already exists.',
+        'auth/weak-password':       'Password must be at least 6 characters.',
+        'auth/invalid-credential':  'Incorrect email or password.',
+        'auth/too-many-requests':   'Too many attempts. Please try again later.',
+      };
+      errEl.textContent = msgs[e.code] || 'Something went wrong. Please try again.';
     }
-  } else {
-    // ── Signed out ──
-    _uid = null;
-    if (_snapshotUnsub) { _snapshotUnsub(); _snapshotUnsub = null; }
-    authScreen.classList.remove('hidden');
-    // Hide the main app
-    const main = document.getElementById('main-app');
-    if (main) main.style.display = 'none';
-    const ls = document.getElementById('login-screen');
-    if (ls) ls.classList.add('hidden');
+  };
+
+  window.fbResetPassword = async function() {
+    const email = document.getElementById('fb-email').value.trim();
+    const errEl = document.getElementById('fb-auth-err');
+    if (!email) { errEl.textContent = 'Enter your email above first.'; return; }
+    try {
+      await auth.sendPasswordResetEmail(email);
+      errEl.style.color = '#69f0ae';
+      errEl.textContent = 'Reset email sent — check your inbox.';
+      setTimeout(() => { errEl.style.color = ''; errEl.textContent = ''; }, 5000);
+    } catch(e) {
+      errEl.textContent = 'Could not send reset email. Check the address.';
+    }
+  };
+
+  window.fbSignOut = async function() {
+    if (!confirm('Sign out of Luminary?')) return;
+    if (_snapshotUnsub) _snapshotUnsub();
+    await auth.signOut();
+  };
+
+  // ── Sync indicator ──
+  function showSyncStatus(state) {
+    let el = document.getElementById('fb-sync-status');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'fb-sync-status';
+      el.style.cssText = 'position:fixed;bottom:72px;right:12px;font-size:.65rem;font-family:DM Sans,sans-serif;padding:3px 10px;border-radius:10px;z-index:9999;pointer-events:none;transition:opacity .4s;border:1px solid rgba(255,255,255,.12)';
+      document.body.appendChild(el);
+    }
+    if (state === 'saving') {
+      el.style.cssText += ';background:rgba(61,43,31,.85);color:rgba(250,247,242,.7);opacity:1';
+      el.textContent = '☁ Saving…';
+    } else if (state === 'saved') {
+      el.style.cssText += ';background:rgba(44,74,53,.85);color:rgba(250,247,242,.8);opacity:1';
+      el.textContent = '✓ Synced';
+      setTimeout(() => { el.style.opacity = '0'; }, 2000);
+    } else if (state === 'error') {
+      el.style.cssText += ';background:rgba(180,60,40,.85);color:#fff;opacity:1';
+      el.textContent = '⚠ Sync error';
+      setTimeout(() => { el.style.opacity = '0'; }, 4000);
+    }
   }
-});
 
-// Allow Enter key on password field
-document.getElementById('fb-password').addEventListener('keydown', e => {
-  if (e.key === 'Enter') window.fbSubmit();
-});
-document.getElementById('fb-email').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('fb-password').focus();
-});
+  // ── Firestore helpers ──
+  function userDocRef() { return db.collection('luminary_users').doc(_uid); }
 
-// ── Guest / local-only mode ──
-window.fbGuestMode = function() {
-  const authScreen = document.getElementById('fb-auth-screen');
-  authScreen.classList.add('hidden');
-  // Boot the app without cloud sync
-  if (typeof window._luminaryBoot === 'function') {
-    window._luminaryBoot();
+  async function pushToFirestore() {
+    if (!navigator.onLine || !_uid) return;
+    try {
+      showSyncStatus('saving');
+      const data = {};
+      SYNC_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
+      data._updatedAt = Date.now();
+      _ignoreNextSnapshot = true;
+      await userDocRef().set(data);
+      showSyncStatus('saved');
+    } catch(e) {
+      console.warn('[Firebase] push failed', e);
+      showSyncStatus('error');
+    }
   }
-};
 
+  async function pullFromFirestore() {
+    if (!navigator.onLine || !_uid) return;
+    try {
+      const snap = await userDocRef().get();
+      if (!snap.exists) return;
+      applyData(snap.data());
+    } catch(e) {
+      console.warn('[Firebase] pull failed', e);
+    }
+  }
 
+  function applyData(data) {
+    let changed = false;
+    SYNC_KEYS.forEach(k => {
+      if (data[k] !== undefined && localStorage.getItem(k) !== data[k]) {
+        Object.getPrototypeOf(localStorage).setItem.call(localStorage, k, data[k]);
+        changed = true;
+      }
+    });
+    if (!changed) return;
+    if (typeof loadState === 'function') loadState();
+    if (typeof loadDayJournalData === 'function') loadDayJournalData();
+    if (typeof loadWkData === 'function') loadWkData();
+    if (typeof restoreControls === 'function') restoreControls();
+    if (typeof renderLoginScreen === 'function') renderLoginScreen();
+    showSyncStatus('saved');
+  }
+
+  function startRealtimeSync() {
+    if (_snapshotUnsub) _snapshotUnsub();
+    _snapshotUnsub = userDocRef().onSnapshot(snap => {
+      if (!snap.exists) return;
+      if (_ignoreNextSnapshot) { _ignoreNextSnapshot = false; return; }
+      applyData(snap.data());
+    });
+  }
+
+  function debouncedPush() {
+    clearTimeout(_syncDebounce);
+    _syncDebounce = setTimeout(pushToFirestore, 1500);
+  }
+
+  let _patched = false;
+  function patchSaveFunctions() {
+    if (_patched) return; _patched = true;
+    ['saveState','saveLessonProgress','saveWkData','savePlanNotesStore'].forEach(name => {
+      if (typeof window[name] === 'function') {
+        const orig = window[name];
+        window[name] = function(...a) { orig.apply(this,a); debouncedPush(); };
+      }
+    });
+    const _origSetItem = localStorage.setItem.bind(localStorage);
+    localStorage.setItem = function(key, value) {
+      _origSetItem(key, value);
+      if (SYNC_KEYS.includes(key)) debouncedPush();
+    };
+  }
+
+  function bootApp() {
+    if (_booted) return;
+    _booted = true;
+    if (typeof window._luminaryBoot === 'function') window._luminaryBoot();
+  }
+
+  // ── Auth state listener ──
+  auth.onAuthStateChanged(async function(user) {
+    const authScreen = document.getElementById('fb-auth-screen');
+    const btn = document.getElementById('fb-auth-btn');
+    if (btn) { btn.textContent = _isSignUp ? 'Create Account' : 'Sign In'; btn.disabled = false; }
+
+    if (user) {
+      _uid = user.uid;
+      if (authScreen) authScreen.classList.add('hidden');
+      await pullFromFirestore();
+      bootApp();
+      if (navigator.onLine) startRealtimeSync();
+      window.addEventListener('online', () => { pullFromFirestore(); startRealtimeSync(); });
+      patchSaveFunctions();
+      if (!document.getElementById('fb-signout-btn')) {
+        const hdrRight = document.querySelector('.hdr-top');
+        if (hdrRight) {
+          const soBtn = document.createElement('button');
+          soBtn.id = 'fb-signout-btn';
+          soBtn.textContent = 'Sign out';
+          soBtn.onclick = window.fbSignOut;
+          soBtn.style.cssText = 'background:none;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.4);font-family:DM Sans,sans-serif;font-size:.65rem;padding:3px 10px;border-radius:20px;cursor:pointer;white-space:nowrap;';
+          hdrRight.appendChild(soBtn);
+        }
+      }
+    } else {
+      _uid = null;
+      if (_snapshotUnsub) { _snapshotUnsub(); _snapshotUnsub = null; }
+      if (authScreen) authScreen.classList.remove('hidden');
+      const main = document.getElementById('main-app');
+      if (main) main.style.display = 'none';
+      const ls = document.getElementById('login-screen');
+      if (ls) ls.classList.add('hidden');
+    }
+  });
+
+  // Enter key support
+  document.addEventListener('DOMContentLoaded', function() {
+    const pw = document.getElementById('fb-password');
+    const em = document.getElementById('fb-email');
+    if (pw) pw.addEventListener('keydown', e => { if (e.key==='Enter') window.fbSubmit(); });
+    if (em) em.addEventListener('keydown', e => { if (e.key==='Enter') { const p=document.getElementById('fb-password'); if(p) p.focus(); } });
+  });
+
+  // Guest / local-only mode
+  window.fbGuestMode = function() {
+    const authScreen = document.getElementById('fb-auth-screen');
+    if (authScreen) authScreen.classList.add('hidden');
+    bootApp();
+  };
+
+})();
 </script>
 
 <script>
