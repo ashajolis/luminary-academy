@@ -1,0 +1,21 @@
+{
+  "name": "Luminary Home Academy",
+  "short_name": "Luminary",
+  "description": "Cambridge-aligned home academy planner for Kenyan families",
+  "start_url": "/luminary-academy/",
+  "scope": "/luminary-academy/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#3D2B1F",
+  "theme_color": "#3D2B1F",
+  "lang": "en",
+  "categories": ["education", "productivity"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [],
+  "shortcuts": []
+}
