@@ -12,33 +12,9 @@
 <meta name="apple-mobile-web-app-title" content="Luminary">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="description" content="Cambridge-aligned home academy planner for Kenyan families">
-<link rel="manifest" id="pwa-manifest-link">
-<link rel="apple-touch-icon" id="pwa-apple-icon">
-<link rel="icon" type="image/png" sizes="192x192" id="pwa-favicon">
-<script>
-// Generate inline manifest and SVG icon — no external files needed
-(function(){
-  const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="36" fill="#3D2B1F"/><text x="96" y="130" font-size="110" text-anchor="middle" font-family="serif">🏡</text></svg>`;
-  const iconUrl = 'data:image/svg+xml;base64,' + btoa(iconSvg);
-  document.getElementById('pwa-apple-icon').href = iconUrl;
-  document.getElementById('pwa-favicon').href = iconUrl;
-  const manifest = {
-    name: 'Luminary Home Academy',
-    short_name: 'Luminary',
-    description: 'Cambridge-aligned homeschool app — Foundation to Grade 9',
-    start_url: './',
-    display: 'standalone',
-    background_color: '#3D2B1F',
-    theme_color: '#3D2B1F',
-    icons: [
-      { src: iconUrl, sizes: '192x192', type: 'image/svg+xml' },
-      { src: iconUrl, sizes: '512x512', type: 'image/svg+xml' }
-    ]
-  };
-  const mUrl = 'data:application/json;base64,' + btoa(JSON.stringify(manifest));
-  document.getElementById('pwa-manifest-link').href = mUrl;
-})();
-</script>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -1525,7 +1501,6 @@ body.cafe-theme-jungle #cafe-live-panel .cafe-timer-card{background:linear-gradi
   </div>
   <div style="display:flex;align-items:center;gap:8px">
     <button id="pwa-install-btn" onclick="triggerInstall()" style="display:none;align-items:center;gap:6px;background:var(--terra);border:none;border-radius:20px;padding:.35rem .9rem;color:#fff;font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:500;cursor:pointer;white-space:nowrap">⬇ Install App</button>
-    <button onclick="(function(){const k=prompt('Enter your Anthropic API key (get one at console.anthropic.com).\nLeave blank to clear the saved key:',getAIApiKey()||'');if(k===null)return;setAIApiKey(k);alert(k?'✅ API key saved! AI features are now active.':'🗑 API key cleared.');})();" style="background:none;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.6);font-family:DM Sans,sans-serif;font-size:.65rem;padding:3px 10px;border-radius:20px;cursor:pointer;white-space:nowrap" title="Set Anthropic API key for AI features">🤖 AI Key</button>
     <div class="student-switcher" onclick="showLogin()">
     <div class="sw-avatar" id="sw-avatar"></div>
     <div>
@@ -2523,7 +2498,7 @@ body.cafe-theme-jungle #cafe-live-panel .cafe-timer-card{background:linear-gradi
     <span class="bnav-icon">✅</span>
     <span class="bnav-lbl">Mastery</span>
   </button>
-  <button class="bnav-btn" data-tab="__more__" onclick="toggleMoreDrawer()">
+  <button class="bnav-btn" onclick="toggleMoreDrawer()">
     <span class="bnav-icon">⋯</span>
     <span class="bnav-lbl">More</span>
   </button>
@@ -3770,62 +3745,15 @@ const WEEKLY_PROJECTS={
 // ═══════════════════════════════════════════════════════════
 //  STATE MANAGEMENT
 // ═══════════════════════════════════════════════════════════
-// ── HTML escape helper — prevents XSS when inserting user data into innerHTML ──
-function esc(str){ return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-
 let students=[];
 let currentStudentId=null;
 let completedSessions=new Set();
 
-// ══════════════════════════════════════════════════════════════
-//  AI CONFIGURATION — centralised model + API key management
-// ══════════════════════════════════════════════════════════════
-const AI_MODEL = 'claude-sonnet-4-20250514'; // update here when model changes
-
-function getAIApiKey(){
-  return localStorage.getItem('lum_ai_api_key') || '';
-}
-function setAIApiKey(key){
-  if(key) localStorage.setItem('lum_ai_api_key', key.trim());
-  else localStorage.removeItem('lum_ai_api_key');
-}
-function requireAIApiKey(){
-  const key = getAIApiKey();
-  if(key) return key;
-  const entered = prompt(
-    '🤖 AI features need an Anthropic API key.\n\n' +
-    'Get one free at: console.anthropic.com\n\n' +
-    'Paste your key below (starts with sk-ant-...):'
-  );
-  if(entered && entered.trim().startsWith('sk-')){
-    setAIApiKey(entered.trim());
-    return entered.trim();
-  } else if(entered){
-    alert('That does not look like a valid API key (should start with sk-ant-). Please try again.');
-  }
-  return null;
-}
-
-// Build a dynamic system prompt from actual student data
-function buildAISystemPrompt(student){
-  const name = student ? student.name : 'the student';
-  const age  = student ? student.age  : 'unknown';
-  const pronoun = 'they'; // gender-neutral
-  return `You are an expert home-school tutor and curriculum designer for a Cambridge-aligned homeschool system serving students from Foundation to Grade 9.
-
-Your job: help the parent/tutor teach ${name} (Age ${age}) effectively.
-Your personality: warm, expert, direct, encouraging.
-
-When giving lesson plans, always use the 4-step structure: Teach → Guided Practice → Independent Check → Real Life Connection.
-Give specific examples, exact questions to ask, and exact activities to do. Avoid generic advice.
-Format responses clearly with **bold** headings.`;
-}
-
 // ── LESSON PROGRESS: tracks current topic index per student per subject ──
 // Only advances when a lesson is ticked ✓ done. Never auto-advances.
 let lessonProgress = {};
-try{ const r=localStorage.getItem('lum_lprog'); if(r) lessonProgress=JSON.parse(r); }catch(e){ console.warn("[luminary] silent error:", e); }
-function saveLessonProgress(){ try{ localStorage.setItem('lum_lprog', JSON.stringify(lessonProgress)); }catch(e){ console.warn('[saveLessonProgress] failed:', e); } }
+try{ const r=localStorage.getItem('lum_lprog'); if(r) lessonProgress=JSON.parse(r); }catch(e){}
+function saveLessonProgress(){ try{ localStorage.setItem('lum_lprog', JSON.stringify(lessonProgress)); }catch(e){} }
 
 function getLessonIdx(studentId, subjectId){
   return (lessonProgress[studentId] && lessonProgress[studentId][subjectId] != null)
@@ -3867,34 +3795,11 @@ function loadState(){
       assignments=d.assignments||{};
       goals=d.goals||{};
       stars=d.stars||{};
-      // Prune completed sessions older than 60 days to prevent unbounded growth
-      pruneOldSessions();
     }
-  }catch(e){ console.warn('[loadState] failed:', e); }
-}
-// Remove session IDs for dates older than 60 days
-// Session IDs are formatted: d-<Date.toDateString()>-<studentId>-<idx>
-function pruneOldSessions(){
-  const cutoff = Date.now() - (60 * 24 * 60 * 60 * 1000);
-  const pruned = new Set();
-  completedSessions.forEach(sid=>{
-    // Extract date string from session ID (between first and second dash-group)
-    const parts = sid.split('-');
-    if(parts.length < 3){ pruned.add(sid); return; }
-    // Date string is parts[1] through parts[4] (e.g. "Mon Jun 09 2025")
-    const dateStr = parts.slice(1, 5).join(' ');
-    const d = new Date(dateStr);
-    if(!isNaN(d.getTime()) && d.getTime() > cutoff) pruned.add(sid);
-  });
-  completedSessions = pruned;
+  }catch(e){}
 }
 function saveState(){
-  try{
-    localStorage.setItem('hls_v4',JSON.stringify({students,mastery:masteryData,sessions:[...completedSessions],notes:sessionNotes,ratings:sessionRatings,books:bookLogs,assignments:assignments,goals:goals,stars:stars}));
-  }catch(e){
-    console.warn('[saveState] localStorage write failed:', e);
-    alert('⚠️ Could not save your progress. Your browser storage may be full. Please clear some browser data and try again.');
-  }
+  try{localStorage.setItem('hls_v4',JSON.stringify({students,mastery:masteryData,sessions:[...completedSessions],notes:sessionNotes,ratings:sessionRatings,books:bookLogs,assignments:assignments,goals:goals,stars:stars}));}catch(e){}
 }
 
 // ─── calculate grade level for a student per subject ───
@@ -3987,7 +3892,7 @@ function renderLoginScreen(){
     const pct=totalPoss>0?Math.round(totalDone/totalPoss*100):0;
     const div=document.createElement('div');
     div.className='student-card';
-    div.innerHTML=`<div class="student-avatar" style="background:rgba(255,255,255,.1)">${esc(s.avatar)}</div><div class="student-name">${esc(s.name)}</div><div class="student-grade-lbl">Age ${esc(s.age)} · ${pct}% mastered</div>`;
+    div.innerHTML=`<div class="student-avatar" style="background:rgba(255,255,255,.1)">${s.avatar}</div><div class="student-name">${s.name}</div><div class="student-grade-lbl">Age ${s.age} · ${pct}% mastered</div>`;
     div.onclick=()=>loginAsStudent(s.id);
     grid.appendChild(div);
   });
@@ -4043,12 +3948,6 @@ function deleteStudent(id){
   if(students.length===0)closeModal('teacher-modal');
 }
 function loginAsStudent(id){
-  // Clear any running timers from previous student
-  Object.keys(activeTimers).forEach(sid=>{
-    if(activeTimers[sid]){ clearInterval(activeTimers[sid].interval); }
-  });
-  activeTimers = {};
-  realTimeSessions = {};
   currentStudentId=id;
   const s=students.find(st=>st.id===id);
   if(!s) return;
@@ -4078,13 +3977,10 @@ function showAddStudent(){
 function closeModal(id){document.getElementById(id).classList.add('hidden');}
 function saveNewStudent(){
   const name=document.getElementById('new-student-name').value.trim();
-  let age=parseInt(document.getElementById('new-student-age').value)||7;
-  if(age<3) age=3;
-  if(age>18) age=18;
+  const age=parseInt(document.getElementById('new-student-age').value)||7;
   const av=document.querySelector('.av-opt.sel');
   const avatar=av?av.dataset.av:'🧒';
   if(!name){alert('Please enter a student name');return;}
-  if(name.length>60){alert('Name must be 60 characters or fewer');return;}
   const editId=document.getElementById('add-student-modal').dataset.editId;
   if(editId){
     // Edit mode
@@ -4112,17 +4008,8 @@ document.getElementById('avatar-picker').addEventListener('click',e=>{
 //  TAB SWITCHING
 // ═══════════════════════════════════════════════════════════
 function _switchTabCore(t){
-  // Tabs that live in the More drawer — More button should be active for these
-  const MORE_TABS = new Set(['progress','foundation','curriculum','newsubjects','reading','booklist','assignments','goals','rewards','aitutor','dayjournal','export','tutor','cafe','portfolio','resources']);
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  // Bottom nav active state
-  document.querySelectorAll('.bnav-btn').forEach(b=>{
-    const dt = b.getAttribute('data-tab');
-    if(dt === t) b.classList.add('active');
-    else if(dt === '__more__' && MORE_TABS.has(t)) b.classList.add('active');
-    else b.classList.remove('active');
-  });
   const view=document.getElementById('view-'+t);
   if(view) view.classList.add('active');
   document.querySelectorAll('.tab-btn').forEach(b=>{
@@ -4650,7 +4537,7 @@ function renderToday(){
 
   const projKeys=Object.keys(WEEKLY_PROJECTS);
   const projKey=projKeys[now.getDay()%projKeys.length];
-  document.getElementById('today-project').innerHTML=`<div class="project-title">🔭 This Week's Project — ${esc(student.name)}</div><div style="font-size:.85rem;color:var(--bark);line-height:1.6">${WEEKLY_PROJECTS[projKey]}</div><div class="project-steps"><div class="proj-step">📐 Plan it</div><div class="proj-step">🔨 Do it</div><div class="proj-step">📸 Document it</div><div class="proj-step">💬 Present it</div></div>`;
+  document.getElementById('today-project').innerHTML=`<div class="project-title">🔭 This Week's Project — ${student.name}</div><div style="font-size:.85rem;color:var(--bark);line-height:1.6">${WEEKLY_PROJECTS[projKey]}</div><div class="project-steps"><div class="proj-step">📐 Plan it</div><div class="proj-step">🔨 Do it</div><div class="proj-step">📸 Document it</div><div class="proj-step">💬 Present it</div></div>`;
 
   updateProg(sessions,now);
 
@@ -4768,8 +4655,6 @@ function toggleDone(sid,el){
   const realSessions=sessions.filter(s=>s.priority>0);
   const eodBox=document.getElementById('eod-box');
   if(eodBox) eodBox.style.display=(doneCount>=Math.ceil(realSessions.length*0.8))?'block':'none';
-  // Check if tomorrow prep panel should appear (defined later in script)
-  if(typeof _checkTomorrowPrepTrigger === 'function') _checkTomorrowPrepTrigger();
 }
 function saveNote(sid,val){
   sessionNotes[sid]=val;
@@ -4907,7 +4792,9 @@ function openAddLessonModal(prefillDate){
   document.getElementById('al-date').value = prefillDate || todayStr();
   // Populate student select
   const sel = document.getElementById('al-student');
-  sel.innerHTML = students.map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
+  sel.innerHTML = students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  if(currentStudentId) sel.value = currentStudentId;
+  // Reset rating
   alRating = 0;
   [1,2,3,4].forEach(r => {
     const btn = document.getElementById('al-r'+r);
@@ -4969,7 +4856,9 @@ function openWhatWeDidModal(prefillDate){
   if(!modal) return;
   document.getElementById('wwd-date').value = prefillDate || todayStr();
   const sel = document.getElementById('wwd-student');
-  sel.innerHTML = students.map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
+  sel.innerHTML = students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  if(currentStudentId) sel.value = currentStudentId;
+  // Pre-fill if already saved
   const key = djKey(currentStudentId, prefillDate||todayStr());
   const existing = dayNotes[key];
   document.getElementById('wwd-text').value      = existing ? existing.text      : '';
@@ -5243,7 +5132,7 @@ function saveEOD(){
   if(!q1&&!q2&&!q3){alert('Please fill in at least one reflection question.');return;}
   const key=`eod_${currentStudentId}_${now.toDateString()}`;
   const data={date:now.toDateString(),q1,q2,q3,savedAt:Date.now()};
-  try{localStorage.setItem(key,JSON.stringify(data));}catch(e){ console.warn("[luminary] silent error:", e); }
+  try{localStorage.setItem(key,JSON.stringify(data));}catch(e){}
   showCelebration('📝','Reflection Saved!','Well done — reviewing what you learned cements it in memory!');
   document.getElementById('eod-box').style.display='none';
 }
@@ -5321,22 +5210,8 @@ function loadWkData(){
       weekCustomLessons = d.custom || {};
       weekDoneLessons   = new Set(d.done || []);
       weekLessonNotes   = d.notes || {};
-      pruneWkData();
     }
-  }catch(e){ console.warn('[loadWkData] failed:', e); }
-}
-// Remove week planner entries older than 90 days
-// Session IDs are formatted: wk-<YYYY-MM-DD>-<subjectId>-<idx>
-function pruneWkData(){
-  const cutoff = Date.now() - (90 * 24 * 60 * 60 * 1000);
-  const isOld = key => {
-    const m = key.match(/wk-(\d{4}-\d{2}-\d{2})/);
-    if(!m) return false;
-    return new Date(m[1]).getTime() < cutoff;
-  };
-  weekDoneLessons.forEach(k=>{ if(isOld(k)) weekDoneLessons.delete(k); });
-  Object.keys(weekCustomLessons).forEach(k=>{ if(isOld(k)) delete weekCustomLessons[k]; });
-  Object.keys(weekLessonNotes).forEach(k=>{ if(isOld(k)) delete weekLessonNotes[k]; });
+  }catch(e){}
 }
 
 function saveWkData(){
@@ -5346,7 +5221,7 @@ function saveWkData(){
       done:   [...weekDoneLessons],
       notes:  weekLessonNotes
     }));
-  }catch(e){ console.warn('[saveWkData] localStorage write failed:', e); }
+  }catch(e){}
 }
 
 function setWeekMode(mode, btn){
@@ -5672,11 +5547,11 @@ function loadLessonEdits(){
   try{
     const raw = localStorage.getItem('lum_lessonedits');
     if(raw) lessonEdits = JSON.parse(raw);
-  }catch(e){ console.warn("[luminary] silent error:", e); }
+  }catch(e){}
 }
 
 function saveLessonEdits_store(){
-  try{ localStorage.setItem('lum_lessonedits', JSON.stringify(lessonEdits)); }catch(e){ console.warn("[luminary] silent error:", e); }
+  try{ localStorage.setItem('lum_lessonedits', JSON.stringify(lessonEdits)); }catch(e){}
 }
 
 loadLessonEdits();
@@ -5731,7 +5606,7 @@ function openLessonEditor(){
           if(!autoContent) autoContent = Object.values(byGrade)[0];
         }
       }
-    }catch(e){ console.warn("[luminary] silent error:", e); }
+    }catch(e){}
   }
 
   // Explain
@@ -6137,7 +6012,7 @@ function renderAIPlan(){
   });
   
   if(blocks.innerHTML===''){
-    blocks.innerHTML=`<div class="empty">No plan yet — go to the <strong>Mastery Planner</strong> tab and mark what ${esc(student.name)} already knows. The plan will generate automatically.</div>`;
+    blocks.innerHTML=`<div class="empty">No plan yet — go to the <strong>Mastery Planner</strong> tab and mark what ${student.name} already knows. The plan will generate automatically.</div>`;
   }
   // Render the needs attention panel too
   renderNeedsAttention();
@@ -6190,7 +6065,7 @@ function openPlanEditor(subjectId, subjectName, topic, lesson, grade){
           if(!autoContent) autoContent = Object.values(byGrade)[0];
         }
       }
-    }catch(e){ console.warn("[luminary] silent error:", e); }
+    }catch(e){}
   }
 
   const strip = s => (s||'').replace(/<[^>]+>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&nbsp;/g,' ');
@@ -6255,8 +6130,8 @@ function saveLessonEdits(){
 }
 
 let planNotes = {};
-try{ const r=localStorage.getItem('lum_plannotes'); if(r) planNotes=JSON.parse(r); }catch(e){ console.warn("[luminary] silent error:", e); }
-function savePlanNotesStore(){ try{ localStorage.setItem('lum_plannotes', JSON.stringify(planNotes)); }catch(e){ console.warn('[savePlanNotesStore] failed:', e); } }
+try{ const r=localStorage.getItem('lum_plannotes'); if(r) planNotes=JSON.parse(r); }catch(e){}
+function savePlanNotesStore(){ try{ localStorage.setItem('lum_plannotes', JSON.stringify(planNotes)); }catch(e){} }
 function getPlanNote(subjectId){ return (planNotes[currentStudentId] || {})[subjectId] || ''; }
 function savePlanNote(subjectId){
   const ta = document.getElementById('aiplan_note_'+subjectId);
@@ -6273,8 +6148,8 @@ function savePlanNote(subjectId){
 //  FLAG DATA — "Needs Attention" per checkpoint
 // ═══════════════════════════════════════════════════════════
 let flagData = {};
-try{ const r=localStorage.getItem('lum_flags'); if(r) flagData=JSON.parse(r); }catch(e){ console.warn("[luminary] silent error:", e); }
-function saveFlagData(){ try{ localStorage.setItem('lum_flags', JSON.stringify(flagData)); }catch(e){ console.warn('[luminary] save failed:', e); } }
+try{ const r=localStorage.getItem('lum_flags'); if(r) flagData=JSON.parse(r); }catch(e){}
+function saveFlagData(){ try{ localStorage.setItem('lum_flags', JSON.stringify(flagData)); }catch(e){} }
 
 function getFlagKey(sid, key){ return !!(flagData[sid] && flagData[sid][key]); }
 function setFlagKey(sid, key, val){
@@ -6833,21 +6708,19 @@ async function generateAILesson(btnEl, subjectId, subjectName, topicHint, sessio
   const masteryProfile = buildStudentMasteryProfile(currentStudentId);
   const allMasteryEmpty = masteryProfile.split('\n').filter(l => l.includes('MASTERED:')).length === 0;
 
-  const apiKey = requireAIApiKey();
-  if(!apiKey){ btnEl.innerHTML='🤖 Generate AI Lesson'; btnEl.disabled=false; return; }
+  const systemPrompt = `You are an expert home-school tutor and curriculum designer for a Cambridge-aligned homeschool system in Kenya serving students from Foundation to Grade 9.
 
-  const systemPrompt = buildAISystemPrompt(student) + `
-
-Your job is to generate a PERSONALISED LESSON PLAN based on the student's exact mastery profile.
+Your job is to generate a PERSONALISED LESSON PLAN for a specific student based on their exact mastery profile — what they already know AND what they haven't yet learned.
 
 RULES:
 1. Identify 2-3 specific KNOWLEDGE GAPS from their NOT YET MASTERED items in the relevant subject
 2. Identify what they HAVE mastered that you can BUILD ON as prior knowledge
 3. Design the lesson to bridge those exact gaps — don't teach what they already know
-4. Include the 4-step lesson structure: Teach → Guided Practice → Independent Check → Real Life
-5. Include exactly 3 practice questions tailored to the gap (with answers)
-6. Write for a parent/tutor — clear, confident, actionable
-7. If NO mastery data exists yet, create a diagnostic starter lesson to assess the student
+4. Use Kenyan context (shillings, ugali, matatu, Lake Victoria, Nairobi etc.) in examples
+5. Include the 4-step lesson structure: Teach → Guided Practice → Independent Check → Real Life
+6. Include exactly 3 practice questions tailored to the gap (with answers)
+7. Write for a parent/tutor — clear, confident, actionable
+8. If NO mastery data exists yet, create a diagnostic starter lesson to assess the student
 
 Format your response with clear ### headings for each section. Be specific and practical. Avoid generic advice.`;
 
@@ -6864,9 +6737,9 @@ ${allMasteryEmpty
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "anthropic-dangerous-direct-browser-access": "true", "x-api-key": apiKey },
+      headers: { "Content-Type": "application/json", "anthropic-dangerous-direct-browser-access": "true" },
       body: JSON.stringify({
-        model: AI_MODEL,
+        model: "claude-sonnet-4-20250514",
         max_tokens: 1000,
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }]
@@ -6985,7 +6858,7 @@ function renderReadingLog(){
   `;
   
   if(books.length===0){
-    document.getElementById('reading-list').innerHTML=`<div class="empty" style="padding:3rem">No books logged yet. Start by adding the first book ${esc(student.name)} is reading!</div>`;
+    document.getElementById('reading-list').innerHTML=`<div class="empty" style="padding:3rem">No books logged yet. Start by adding the first book ${student.name} is reading!</div>`;
     return;
   }
   
@@ -7089,7 +6962,7 @@ function renderAssignments(){
   const subjectIcons={maths:'∑',english:'📖',science:'🔬',geography:'🌍',history:'📜',finance:'💰',art:'🎨',pe:'⚽',other:'📋'};
   
   if(items.length===0){
-    document.getElementById('assignments-list').innerHTML=`<div class="empty" style="padding:3rem">No assignments found. ${all.length===0?'Create the first assignment for '+esc(student.name)+'!':'Try changing the filter above.'}</div>`;
+    document.getElementById('assignments-list').innerHTML=`<div class="empty" style="padding:3rem">No assignments found. ${all.length===0?'Create the first assignment for '+student.name+'!':'Try changing the filter above.'}</div>`;
     return;
   }
   
@@ -7153,7 +7026,7 @@ function renderGoals(){
   document.getElementById('goals-sub').textContent=`${student.name}'s learning targets`;
   const all=getGoals();
   if(!all.length){
-    document.getElementById('goals-list').innerHTML=`<div class="empty" style="padding:3rem">No goals yet. Set the first goal for ${esc(student.name)}!</div>`;
+    document.getElementById('goals-list').innerHTML=`<div class="empty" style="padding:3rem">No goals yet. Set the first goal for ${student.name}!</div>`;
     return;
   }
   const subjectEmoji={maths:'∑',english:'📖',science:'🔬',reading:'📚',geography:'🌍',history:'📜',art:'🎨',pe:'⚽',life:'🌱',other:'🎯'};
@@ -7694,9 +7567,7 @@ let aiChatHistory=[];
 function clearAIChat(){
   aiChatHistory=[];
   const msgs=document.getElementById('ai-chat-messages');
-  const student=currentStudentId?students.find(s=>s.id===currentStudentId):null;
-  const name = student ? student.name : 'your student';
-  msgs.innerHTML=`<div class="ai-msg ai"><strong>🎓 Hello! I'm your AI tutor.</strong><br><br>I have ${esc(name)}'s full mastery profile. Ask me anything about the curriculum, a lesson, or how to teach a topic.</div>`;
+  msgs.innerHTML=`<div class="ai-msg ai"><strong>🎓 Hello! I'm your AI tutor.</strong><br><br>I know your daughters' full mastery profiles. Ask me anything about the curriculum, a lesson, or how to teach a topic.</div>`;
 }
 
 function aiQuickAsk(q){
@@ -7723,19 +7594,24 @@ async function sendAIChat(){
   const student=currentStudentId?students.find(s=>s.id===currentStudentId):null;
   const masteryProfile=currentStudentId?buildStudentMasteryProfile(currentStudentId):'No student selected.';
 
-  const apiKey = requireAIApiKey();
-  if(!apiKey){ btn.disabled=false; const typingEl=document.getElementById(typingId); if(typingEl) typingEl.remove(); return; }
+  const systemPrompt=`You are an expert home-school tutor and curriculum designer for a Cambridge-aligned homeschool in Nairobi, Kenya. You are tutoring brilliant daughters. You are deeply knowledgeable about: Mathematics, English, Science, History, Geography, Financial Literacy, Life Skills, Music, Art, Physical Education, Character Education, Public Speaking, Kiswahili, Critical Thinking, and all aspects of child education.
 
-  const systemPrompt = buildAISystemPrompt(student) + (student
-    ? `\n\nCurrent student mastery profile:\nStudent: ${student.name}, Age ${student.age}\n${masteryProfile}`
-    : '\n\nNo specific student selected.');
+Your personality: warm, expert, direct, encouraging. You use Kenyan examples and context naturally (shillings, ugali, matatu, Lake Victoria, Nairobi, the Rift Valley, etc.).
+
+You have access to the current student's mastery profile:
+${student?`Student: ${student.name}, Age ${student.age}\n${masteryProfile}`:'No specific student selected.'}
+
+When giving lesson plans, always use the 4-step structure: Teach → Guided Practice → Independent Check → Real Life Connection.
+When giving activity suggestions, make them practical for a Kenyan home environment.
+Be specific, not generic. Give examples. Give exact questions to ask. Give exact activities to do.
+Format responses clearly with bold headings using **text** for bold.`;
 
   try{
     const response=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true','x-api-key':apiKey},
+      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({
-        model: AI_MODEL,
+        model:'claude-sonnet-4-20250514',
         max_tokens:1000,
         system:systemPrompt,
         messages:aiChatHistory
@@ -7987,7 +7863,6 @@ window._luminaryBoot = function() {
   loadState();
   loadDayJournalData();
   loadWkData();
-  loadMovedTomorrow();
   restoreControls();
   renderLoginScreen();
   if(students.length===1){ loginAsStudent(students[0].id); }
@@ -8170,7 +8045,7 @@ let movedToTomorrow = []; // { subject, topic, duration, subjectId }
 
 function moveToTomorrow(subject, topic, duration, subjectId){
   movedToTomorrow.push({subject, topic, duration, subjectId, addedAt:Date.now()});
-  try{ localStorage.setItem('lum_movedTomorrow', JSON.stringify(movedToTomorrow)); }catch(e){ console.warn("[luminary] silent error:", e); }
+  try{ localStorage.setItem('lum_movedTomorrow', JSON.stringify(movedToTomorrow)); }catch(e){}
   showCelebration('📅','Moved to Tomorrow!',`${subject} will appear in tomorrow's Tomorrow Prep panel.`);
   renderTomorrowPrepPanel();
 }
@@ -8184,8 +8059,9 @@ function loadMovedTomorrow(){
       const cutoff = Date.now() - 2*24*60*60*1000;
       movedToTomorrow = arr.filter(m=>m.addedAt > cutoff);
     }
-  }catch(e){ console.warn('[loadMovedTomorrow] failed:', e); }
+  }catch(e){}
 }
+loadMovedTomorrow();
 
 // ═══════════════════════════════════════════════════════════
 //  TOMORROW PREP PANEL
@@ -8224,7 +8100,7 @@ function renderTomorrowPrepPanel(){
         const byGrade=bySubject[best];
         if(byGrade) resources = (Object.values(byGrade)[0]?.resources||[]);
       }
-    }catch(e){ console.warn("[luminary] silent error:", e); }
+    }catch(e){}
     resources.forEach(r=>allResources.add(r));
     html += `<div class="tomorrow-lesson-row">
       <div class="tomorrow-subject">${l.subject}</div>
@@ -8262,8 +8138,11 @@ function renderTomorrowPrepPanel(){
   panel.style.display = 'block';
 }
 
-// Tomorrow Prep panel trigger — called directly from toggleDone after state change
-function _checkTomorrowPrepTrigger(){
+// Show Tomorrow Prep panel when most of today's sessions are done
+const _origToggleDone = toggleDone;
+function toggleDone(sid, el){
+  _origToggleDone(sid, el);
+  // Show tomorrow prep after 80% done
   const now = new Date();
   const subjectGrades={maths:getStudentGradeForSubject(currentStudentId,'maths'),english:getStudentGradeForSubject(currentStudentId,'english'),science:getStudentGradeForSubject(currentStudentId,'science'),history:getStudentGradeForSubject(currentStudentId,'history'),geography:getStudentGradeForSubject(currentStudentId,'geography'),finance:getStudentGradeForSubject(currentStudentId,'finance')};
   const sessions = getDayPlan(subjectGrades, now.getDay()).filter(s=>s.priority>0);
@@ -8520,8 +8399,8 @@ const AFTERNOON_CATS = [
 ];
 
 let afternoonPinned = {};
-try{ const r=localStorage.getItem('lum_aft_pinned'); if(r) afternoonPinned=JSON.parse(r); }catch(e){ console.warn("[luminary] silent error:", e); }
-function saveAfternoonPinned(){ try{localStorage.setItem('lum_aft_pinned', JSON.stringify(afternoonPinned));}catch(e){ console.warn('[luminary] save failed:', e); } }
+try{ const r=localStorage.getItem('lum_aft_pinned'); if(r) afternoonPinned=JSON.parse(r); }catch(e){}
+function saveAfternoonPinned(){ try{localStorage.setItem('lum_aft_pinned', JSON.stringify(afternoonPinned));}catch(e){} }
 
 let currentAfternoonPicks = {};
 
@@ -8639,11 +8518,7 @@ const auth = getAuth(fbApp);
 const SYNC_KEYS = [
   'hls_v4','lum_lprog','lum_dayjournal','lum_weekplanner',
   'lum_lessonedits','lum_plannotes','lum_aft_pinned',
-  'lum_schoolMode','lum_cyclePhase','lum_controlsDay',
-  // Previously missing — these were local-only and lost between devices:
-  'luminary_cafe_v3','lum_portfolio_v1','lum_resources_v2',
-  'lum_res_attachments_v1','lum_custom_snacks_v1','lum_custom_activities_v1',
-  'lum_flags','lum_movedTomorrow','lum_cafe_menus','lum_cafe_week_plans'
+  'lum_schoolMode','lum_cyclePhase','lum_controlsDay'
 ];
 
 let _uid = null;
@@ -8778,21 +8653,8 @@ function applyData(data) {
   if (typeof loadState === 'function') loadState();
   if (typeof loadDayJournalData === 'function') loadDayJournalData();
   if (typeof loadWkData === 'function') loadWkData();
-  if (typeof loadMovedTomorrow === 'function') loadMovedTomorrow();
   if (typeof restoreControls === 'function') restoreControls();
   if (typeof renderLoginScreen === 'function') renderLoginScreen();
-  // Reload newly-synced modules if their views are currently active
-  if (typeof pfLoad === 'function') pfLoad();
-  if (typeof resLoad === 'function') resLoad();
-  if (typeof rattLoad === 'function') rattLoad();
-  // Re-render active view to reflect synced data immediately
-  const activeView = document.querySelector('.view.active');
-  if (activeView) {
-    const t = activeView.id.replace('view-', '');
-    if (t === 'cafe' && typeof renderStudyCafe === 'function') renderStudyCafe();
-    if (t === 'portfolio' && typeof renderPortfolio === 'function') renderPortfolio();
-    if (t === 'resources' && typeof renderResourcesLibrary === 'function') renderResourcesLibrary();
-  }
   showSyncStatus('saved');
 }
 
@@ -9027,7 +8889,7 @@ function loadCafeData(){
   try{
     const r = localStorage.getItem(CAFE_KEY);
     if(r) Object.assign(cafeData, JSON.parse(r));
-  }catch(e){ console.warn("[luminary] silent error:", e); }
+  }catch(e){}
   cafeOpen   = cafeData.isOpen || false;
   cafeBlocks = (cafeData.blocks && cafeData.blocks.length)
     ? cafeData.blocks.map(b=>({...b}))
@@ -9036,7 +8898,7 @@ function loadCafeData(){
 function saveCafeData(){
   cafeData.isOpen = cafeOpen;
   cafeData.blocks = cafeBlocks.map(b=>({...b}));
-  try{ localStorage.setItem(CAFE_KEY, JSON.stringify(cafeData)); }catch(e){ console.warn("[luminary] silent error:", e); }
+  try{ localStorage.setItem(CAFE_KEY, JSON.stringify(cafeData)); }catch(e){}
 }
 function getDefaultBlocks(){
   return [
@@ -9179,7 +9041,7 @@ function renderCafeLessonPanel(){
       const dow = new Date().getDay();
       if(dow>=1 && dow<=5) lessons = getDayPlan(sg, dow, currentStudentId) || [];
     }
-  }catch(e){ console.warn("[luminary] silent error:", e); }
+  }catch(e){}
   if(!lessons.length){
     el.innerHTML = '<div style="font-size:.78rem;color:var(--bark-lt);padding:.5rem 0;">Log in as a student to see today\'s lessons here.</div>';
     return;
@@ -9214,7 +9076,7 @@ window.cafeAutoFillToday = function(){
       const dow = new Date().getDay();
       if(dow>=1&&dow<=5) lessons = getDayPlan(sg,dow,currentStudentId)||[];
     }
-  }catch(e){ console.warn("[luminary] silent error:", e); }
+  }catch(e){}
   if(!lessons.length){ alert('No lessons found. Make sure you\'re logged in as a student.'); return; }
   cafeBlocks = lessons.slice(0,5).map(l=>{
     const type = l.subjectId || 'custom';
@@ -9280,18 +9142,16 @@ window.cafeGetSnackRecipe = async function(){
   if(!snack){ alert('Type a snack name first!'); return; }
   const resultEl = document.getElementById('cafe-recipe-result');
   if(!resultEl) return;
-  const apiKey = requireAIApiKey();
-  if(!apiKey) return;
   resultEl.style.display='block';
   resultEl.innerHTML = '<em style="color:var(--bark-lt)">Getting recipe…</em>';
   try{
     const res = await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true','x-api-key':apiKey},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        model: AI_MODEL,
+        model:'claude-sonnet-4-20250514',
         max_tokens:1000,
-        messages:[{role:'user',content:`Give a simple, quick recipe for ${snack} that a mum and young child can make together. Format: ingredients list then short numbered steps. Keep it brief and friendly.`}]
+        messages:[{role:'user',content:`Give a simple, quick recipe for ${snack} that a mum and young child can make together in Kenya. Format: ingredients list then short numbered steps. Keep it brief and friendly.`}]
       })
     });
     const data = await res.json();
@@ -9843,10 +9703,10 @@ function loadCafeMenuState(){
   try{
     const s = localStorage.getItem('lum_cafe_menus');
     if(s){ const p=JSON.parse(s); cafeMenuSnacks=p.snacks||[]; cafeMenuDrinks=p.drinks||[]; cafeMenuActivities=p.activities||[]; }
-  }catch(e){ console.warn("[luminary] silent error:", e); }
+  }catch(e){}
 }
 function saveCafeMenuState(){
-  try{ localStorage.setItem('lum_cafe_menus', JSON.stringify({snacks:cafeMenuSnacks,drinks:cafeMenuDrinks,activities:cafeMenuActivities})); }catch(e){ console.warn("[luminary] silent error:", e); }
+  try{ localStorage.setItem('lum_cafe_menus', JSON.stringify({snacks:cafeMenuSnacks,drinks:cafeMenuDrinks,activities:cafeMenuActivities})); }catch(e){}
 }
 loadCafeMenuState();
 
@@ -9936,8 +9796,8 @@ window.cafeToggleActivity = function(name){
 // ── WEEK CAFÉ PLANNER ──
 let cwpOffset = 0; // week offset from current
 let cafeWeekPlans = {};
-try{ const r=localStorage.getItem('lum_cafe_week_plans'); if(r) cafeWeekPlans=JSON.parse(r); }catch(e){ console.warn("[luminary] silent error:", e); }
-function saveCafeWeekPlans(){ try{ localStorage.setItem('lum_cafe_week_plans', JSON.stringify(cafeWeekPlans)); }catch(e){ console.warn('[luminary] save failed:', e); } }
+try{ const r=localStorage.getItem('lum_cafe_week_plans'); if(r) cafeWeekPlans=JSON.parse(r); }catch(e){}
+function saveCafeWeekPlans(){ try{ localStorage.setItem('lum_cafe_week_plans', JSON.stringify(cafeWeekPlans)); }catch(e){} }
 
 const CWP_THEME_MAP={forest:'🌲 Forest Lodge',beach:'🌊 Beach Shack',paris:'🥐 Paris Café',magic:'🔮 Magic Library',space:'🚀 Space Station',market:'🛒 Nairobi Market',jungle:'🦜 Jungle Camp',snow:'❄️ Snowy Chalet'};
 const CWP_DAYS=['Monday','Tuesday','Wednesday','Thursday','Friday'];
@@ -10121,13 +9981,13 @@ let customActivities = [];   // [{id, name, emoji, category, duration, instructi
 let lessonRewards    = {};   // {lessonRecordId: {instructions, reward}}
 
 function loadAll(){
-  try{ const r=localStorage.getItem(CS_KEY); if(r) customSnacks=JSON.parse(r); }catch(e){ console.warn("[luminary] silent error:", e); }
-  try{ const r=localStorage.getItem(CA_KEY); if(r) customActivities=JSON.parse(r); }catch(e){ console.warn("[luminary] silent error:", e); }
-  try{ const r=localStorage.getItem(LR_KEY); if(r) lessonRewards=JSON.parse(r); }catch(e){ console.warn("[luminary] silent error:", e); }
+  try{ const r=localStorage.getItem(CS_KEY); if(r) customSnacks=JSON.parse(r); }catch(e){}
+  try{ const r=localStorage.getItem(CA_KEY); if(r) customActivities=JSON.parse(r); }catch(e){}
+  try{ const r=localStorage.getItem(LR_KEY); if(r) lessonRewards=JSON.parse(r); }catch(e){}
 }
-function saveCustomSnacks(){ try{ localStorage.setItem(CS_KEY, JSON.stringify(customSnacks)); }catch(e){ console.warn('[luminary] save failed:', e); } }
-function saveCustomActivities(){ try{ localStorage.setItem(CA_KEY, JSON.stringify(customActivities)); }catch(e){ console.warn('[luminary] save failed:', e); } }
-function saveLessonRewards(){ try{ localStorage.setItem(LR_KEY, JSON.stringify(lessonRewards)); }catch(e){ console.warn('[luminary] save failed:', e); } }
+function saveCustomSnacks(){ try{ localStorage.setItem(CS_KEY, JSON.stringify(customSnacks)); }catch(e){} }
+function saveCustomActivities(){ try{ localStorage.setItem(CA_KEY, JSON.stringify(customActivities)); }catch(e){} }
+function saveLessonRewards(){ try{ localStorage.setItem(LR_KEY, JSON.stringify(lessonRewards)); }catch(e){} }
 loadAll();
 
 function uid(){ return Date.now()+'_'+Math.random().toString(36).slice(2,7); }
@@ -10935,8 +10795,8 @@ window.getLessonRewards = function(){ return lessonRewards; };
 'use strict';
 const PF_KEY = 'lum_portfolio_v1';
 let pfItems = [];
-function pfLoad(){ try{ const r=localStorage.getItem(PF_KEY); if(r) pfItems=JSON.parse(r); }catch(e){ console.warn('[luminary] save failed:', e); } }
-function pfSave(){ try{ localStorage.setItem(PF_KEY,JSON.stringify(pfItems)); }catch(e){ console.warn('[luminary] save failed:', e); } }
+function pfLoad(){ try{ const r=localStorage.getItem(PF_KEY); if(r) pfItems=JSON.parse(r); }catch(e){} }
+function pfSave(){ try{ localStorage.setItem(PF_KEY,JSON.stringify(pfItems)); }catch(e){} }
 pfLoad();
 
 const PF_ICONS = {image:'🖼',pdf:'📄',file:'📁',note:'📝',milestone:'🏆'};
@@ -11093,10 +10953,10 @@ window.closePfViewModal=function(){ document.getElementById('pf-view-overlay').c
 'use strict';
 const RES_KEY='lum_resources_v2', RATT_KEY='lum_res_attachments_v1';
 let resources=[], resAttachments={};
-function resLoad(){ try{ const r=localStorage.getItem(RES_KEY); if(r) resources=JSON.parse(r); }catch(e){ console.warn('[luminary] save failed:', e); } }
-function resSave(){ try{ localStorage.setItem(RES_KEY,JSON.stringify(resources)); }catch(e){ console.warn('[luminary] save failed:', e); } }
-function rattLoad(){ try{ const r=localStorage.getItem(RATT_KEY); if(r) resAttachments=JSON.parse(r); }catch(e){ console.warn('[luminary] save failed:', e); } }
-function rattSave(){ try{ localStorage.setItem(RATT_KEY,JSON.stringify(resAttachments)); }catch(e){ console.warn('[luminary] save failed:', e); } }
+function resLoad(){ try{ const r=localStorage.getItem(RES_KEY); if(r) resources=JSON.parse(r); }catch(e){} }
+function resSave(){ try{ localStorage.setItem(RES_KEY,JSON.stringify(resources)); }catch(e){} }
+function rattLoad(){ try{ const r=localStorage.getItem(RATT_KEY); if(r) resAttachments=JSON.parse(r); }catch(e){} }
+function rattSave(){ try{ localStorage.setItem(RATT_KEY,JSON.stringify(resAttachments)); }catch(e){} }
 resLoad(); rattLoad();
 
 const RES_ICONS={link:'🔗',pdf:'📄',html:'🌐',word:'📝',epub:'📚',image:'🖼',video:'🎬',other:'📁'};
@@ -11367,7 +11227,7 @@ if(typeof _origDcpOpen==='function'){
         chip.textContent=s.emoji+' '+s.name;
         sc.appendChild(chip);
       });
-    }catch(e){ console.warn('[luminary] save failed:', e); } }
+    }catch(e){} }
     // Append custom activities
     const ac=document.getElementById('dcp-activity-chips');
     if(ac){ try{
@@ -11386,7 +11246,7 @@ if(typeof _origDcpOpen==='function'){
           ac.appendChild(el);
         });
       }
-    }catch(e){ console.warn('[luminary] save failed:', e); } }
+    }catch(e){} }
   };
 }
 
