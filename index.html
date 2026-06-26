@@ -376,7 +376,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--bark);
 .topic-mastery-row{display:flex;align-items:flex-start;gap:8px;padding:.5rem 1rem 0;font-size:.78rem}
 .tmr-topic{color:var(--bark-mid);flex:1;font-weight:500;font-size:.74rem;margin-bottom:.3rem}
 .mastery-checkboxes{padding:.2rem 1rem .7rem 2rem;display:flex;flex-direction:column;gap:4px}
-.mc-item{display:flex;gap:6px;align-items:flex-start;cursor:pointer}
+.mc-item{display:flex;gap:6px;align-items:flex-start;cursor:pointer;padding:2px 0;border-radius:6px;transition:background .1s}
+.mc-item:hover{background:rgba(61,43,31,.04)}
+.mc-item .mc-lbl{flex:1}
+.mc-flag-btn{width:20px;height:20px;border-radius:50%;border:none;background:transparent;cursor:pointer;font-size:.8rem;opacity:.18;transition:opacity .15s;flex-shrink:0;padding:0;line-height:1;margin-top:1px}
+.mc-flag-btn:hover,.mc-flag-btn.flagged{opacity:1}
+.mc-flag-btn.flagged{color:var(--terra)}
+.mc-reason{font-size:.67rem;color:var(--terra);font-style:italic;margin-top:2px;line-height:1.3;display:block}
 .mc-box{width:15px;height:15px;border:2px solid var(--border);border-radius:3px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:.55rem;transition:all .15s}
 .mc-box.on{background:var(--forest-mid);border-color:var(--forest-mid);color:#fff}
 .mc-lbl{font-size:.73rem;color:var(--bark-mid);line-height:1.4}
@@ -522,6 +528,80 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--bark);
 .ct-flag-btn{width:22px;height:22px;border-radius:50%;border:none;background:transparent;cursor:pointer;font-size:.85rem;opacity:.25;transition:opacity .15s;flex-shrink:0;padding:0;line-height:1}
 .ct-flag-btn:hover,.ct-flag-btn.flagged{opacity:1}
 .ct-flag-btn.flagged{color:var(--terra)}
+/* ── RED FLAG REASON MODAL ── */
+#flag-reason-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1500;display:flex;align-items:center;justify-content:center;padding:1rem}
+#flag-reason-overlay.hidden{display:none}
+#flag-reason-modal{background:var(--warm);border-radius:var(--r);padding:1.5rem;width:100%;max-width:440px;box-shadow:0 8px 40px rgba(0,0,0,.25)}
+.frm-title{font-family:'Fraunces',serif;font-size:1.1rem;margin-bottom:.3rem;display:flex;align-items:center;gap:8px}
+.frm-subtitle{font-size:.75rem;color:var(--bark-lt);margin-bottom:1rem;line-height:1.5}
+.frm-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--bark-lt);margin-bottom:.4rem;display:block}
+#flag-reason-text{width:100%;height:90px;padding:.6rem .8rem;border:1px solid var(--border);border-radius:var(--r-sm);font-family:'DM Sans',sans-serif;font-size:.85rem;color:var(--bark);background:var(--cream);resize:vertical;outline:none;line-height:1.5}
+#flag-reason-text:focus{border-color:var(--terra)}
+.frm-char-hint{font-size:.65rem;color:var(--bark-lt);margin-top:3px;text-align:right}
+.frm-btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:1rem}
+/* na-item reason display */
+.na-reason-text{font-size:.7rem;color:var(--bark-mid);margin-top:3px;font-style:italic;line-height:1.4}
+.na-edit-reason{background:none;border:none;cursor:pointer;font-size:.68rem;color:var(--bark-lt);text-decoration:underline;padding:0;font-family:'DM Sans',sans-serif;margin-top:2px}
+.na-edit-reason:hover{color:var(--terra)}
+/* Flag reason chip on curriculum tracker */
+.ct-reason-chip{display:inline-block;font-size:.62rem;color:var(--terra);background:var(--terra-pale);border-radius:8px;padding:1px 6px;margin-left:4px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;cursor:pointer}
+/* ── MENU EDIT CONTROLS ── */
+.cmb-edit-row{display:flex;gap:6px;margin-top:.8rem;padding-top:.7rem;border-top:1px solid rgba(255,255,255,.12);flex-wrap:wrap;align-items:center}
+.cmb-edit-input{flex:1;min-width:120px;padding:.38rem .75rem;border:1px solid rgba(255,255,255,.25);border-radius:20px;background:rgba(255,255,255,.1);color:#fff;font-family:'DM Sans',sans-serif;font-size:.78rem;outline:none}
+.cmb-edit-input::placeholder{color:rgba(255,255,255,.4)}
+.cmb-edit-input:focus{border-color:rgba(255,255,255,.55);background:rgba(255,255,255,.18)}
+.cmb-edit-input.dark{background:var(--cream);color:var(--bark);border-color:var(--border)}
+.cmb-edit-input.dark::placeholder{color:var(--bark-lt)}
+.cmb-edit-input.dark:focus{border-color:var(--terra)}
+.cmb-add-btn{padding:.38rem .9rem;border-radius:20px;border:none;background:var(--terra);color:#fff;font-size:.75rem;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap}
+.cmb-add-btn:hover{background:#a8521e}
+.cmb-add-btn.green{background:#2e7d32}
+.cmb-add-btn.green:hover{background:#1b5e20}
+.cmb-del-item{background:none;border:none;cursor:pointer;font-size:.7rem;color:rgba(255,255,255,.35);padding:0 0 0 4px;line-height:1;flex-shrink:0}
+.cmb-del-item:hover{color:#ff7070}
+.cmb-del-item.dark{color:var(--bark-lt)}
+.cmb-del-item.dark:hover{color:var(--terra)}
+.cmb-cat-add-row{display:flex;gap:6px;margin-top:.6rem;flex-wrap:wrap}
+/* ── CURRICULUM VIEW MODE TOGGLE ── */
+.curr-view-toggle{display:flex;gap:6px;margin-bottom:1rem;padding:0 1rem}
+.cvt-btn{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:.75rem;font-family:'DM Sans',sans-serif;color:var(--bark-lt);transition:all .15s}
+.cvt-btn.on{background:var(--bark);color:#fff;border-color:var(--bark)}
+/* ── BY-SUBJECT PANEL ── */
+#curr-bysubject{padding:0 1rem 2rem}
+.bss-subject{margin-bottom:1.2rem;border-radius:var(--r);border:1px solid var(--border);overflow:hidden}
+.bss-subj-head{display:flex;align-items:center;gap:10px;padding:.7rem 1rem;cursor:pointer;background:var(--warm);user-select:none}
+.bss-subj-icon{font-size:1.2rem}
+.bss-subj-name{font-family:'Fraunces',serif;font-size:1rem;flex:1}
+.bss-subj-toggle{font-size:.75rem;color:var(--bark-lt)}
+.bss-subj-body{display:none;padding:.5rem 1rem 1rem}
+.bss-subj-body.open{display:block}
+.bss-grade-row{display:flex;align-items:flex-start;gap:.8rem;padding:.55rem 0;border-bottom:1px solid var(--border)}
+.bss-grade-row:last-child{border-bottom:none}
+.bss-grade-pill{min-width:76px;font-size:.68rem;font-weight:700;color:#fff;padding:3px 8px;border-radius:10px;text-align:center;flex-shrink:0;margin-top:2px}
+.bss-grade-topics{flex:1}
+.bss-topic-name{font-size:.78rem;font-weight:600;color:var(--bark);margin-bottom:2px}
+.bss-lesson{font-size:.73rem;color:var(--bark-lt);margin-bottom:3px;font-style:italic}
+.bss-concepts{margin:0;padding:0 0 0 1rem;list-style:disc}
+.bss-concepts li{font-size:.7rem;color:var(--bark);line-height:1.6}
+/* ── MASTERY FULL TOPICS MODE ── */
+.mastery-view-tabs{display:flex;gap:6px;margin-bottom:1.2rem}
+.mvt-btn{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:.75rem;font-family:'DM Sans',sans-serif;color:var(--bark-lt);transition:all .15s}
+.mvt-btn.on{background:var(--bark);color:#fff;border-color:var(--bark)}
+/* Full curriculum topics in mastery */
+.mft-block{margin-bottom:1.2rem;border-radius:var(--r);border:1px solid var(--border);overflow:hidden}
+.mft-head{display:flex;align-items:center;gap:10px;padding:.75rem 1rem;cursor:pointer;background:var(--warm);user-select:none}
+.mft-icon{font-size:1.2rem}
+.mft-name{font-family:'Fraunces',serif;font-size:1rem;flex:1}
+.mft-toggle{font-size:.75rem;color:var(--bark-lt)}
+.mft-body{display:none;padding:0 1rem .8rem}
+.mft-body.open{display:block}
+.mft-grade-section{margin-top:.8rem}
+.mft-grade-lbl{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#fff;display:inline-block;padding:2px 10px;border-radius:10px;margin-bottom:.4rem}
+.mft-topic{margin-bottom:.5rem;padding:.4rem .6rem;background:var(--cream);border-radius:6px}
+.mft-topic-name{font-size:.78rem;font-weight:600;color:var(--bark);margin-bottom:2px}
+.mft-lesson{font-size:.72rem;color:var(--bark-lt);font-style:italic;margin-bottom:3px}
+.mft-concepts{margin:0;padding:0 0 0 1rem;list-style:disc}
+.mft-concepts li{font-size:.7rem;color:var(--bark);line-height:1.6}
 
 /* ─── NEEDS ATTENTION PANEL ─── */
 .na-panel{background:var(--warm);border:2px solid rgba(196,98,45,.3);border-radius:var(--r);padding:1rem 1.1rem;margin-bottom:1.2rem}
@@ -1982,6 +2062,12 @@ body.cafe-theme-jungle #cafe-live-panel .cafe-timer-card{background:linear-gradi
 
 <!-- ══════════ CURRICULUM ══════════ -->
 <div id="view-curriculum" class="view">
+<div class="curr-view-toggle">
+  <button class="cvt-btn on" id="cvt-bytopic" onclick="switchCurrView('bytopic')">📚 By Topic</button>
+  <button class="cvt-btn" id="cvt-bysubject" onclick="switchCurrView('bysubject')">📋 By Subject</button>
+</div>
+<!-- BY-TOPIC VIEW (existing) -->
+<div id="curr-bytopic-panel">
 <div class="curr-controls">
   <span class="f-lbl">Category</span>
   <div class="f-row" id="cat-filters">
@@ -2007,6 +2093,11 @@ body.cafe-theme-jungle #cafe-live-panel .cafe-timer-card{background:linear-gradi
   <div id="content"></div>
 </div>
 </div>
+<!-- BY-SUBJECT VIEW (new) -->
+<div id="curr-bysubject-panel" style="display:none">
+  <div id="curr-bysubject"></div>
+</div>
+</div>
 
 <!-- ══════════ MASTERY PLANNER ══════════ -->
 <div id="view-mastery" class="view">
@@ -2021,7 +2112,12 @@ body.cafe-theme-jungle #cafe-live-panel .cafe-timer-card{background:linear-gradi
   <div class="planner-intro">
     <strong>📋 How to use this in 3 minutes:</strong> Go through each subject below and tick every skill your child has already demonstrated. Don't worry about being perfect — tick it if they can do it most of the time. Once you've set this up, click <em>"View Auto-Generated Plan →"</em> above and the app will show you exactly what to teach next in every subject, at your child's exact level. A grade is locked if the previous grade isn't 80% complete — this prevents gaps in learning.
   </div>
+  <div class="mastery-view-tabs">
+    <button class="mvt-btn on" id="mvt-checkpoints" onclick="switchMasteryView('checkpoints')">✓ Mastery Checkpoints</button>
+    <button class="mvt-btn" id="mvt-fulltopics" onclick="switchMasteryView('fulltopics')">📖 Full Curriculum by Grade</button>
+  </div>
   <div id="mastery-planner-content"></div>
+  <div id="mastery-fulltopics-content" style="display:none"></div>
 </div>
 </div>
 
@@ -3238,6 +3334,7 @@ topics:[
 {id:"history",name:"History",icon:"📜",cat:"core",desc:"Kenya · Africa · World History · Historical Enquiry",priority:2,
 topics:[
  {t:"Kenyan History",grades:[
+  {id:1,l:"Me and my world",c:["Who am I? My name, my age, my family","Where do I live? My home, my street, my town","What is a community? People who live and work together","Local helpers: teachers, doctors, shopkeepers, farmers","Kenya is our country — we live in Nairobi/Kenya","My country has a flag, an anthem and a president"]},
   {id:2,l:"My family and community history",c:["Family trees and oral traditions","My community: how it was founded","Local landmarks and their history"]},
   {id:4,l:"Pre-colonial Kenya",c:["Bantu, Nilotic and Cushitic migrations","Great kingdoms: Buganda, Mali, Axum","Mombasa and the Swahili coast"]},
   {id:6,l:"Colonialism & Independence",c:["British colonisation of Kenya 1895","The Mau Mau movement","Kenyan independence 1963; Jomo Kenyatta"]},
@@ -3291,21 +3388,30 @@ topics:[
 topics:[
  {t:"Home & Practical Skills",grades:[
   {id:1,l:"Caring for myself",c:["Morning routine: brush teeth, wash face, tidy room","Dress and undress independently","Handle a cup, plate and cutlery safely"]},
+  {id:2,l:"Basic home routines",c:["Keep bedroom tidy: make bed, put things away","Help set and clear the table","Basic laundry: sort clothes by colour","Water plants and care for a pet or household item","Fold simple items of clothing neatly"]},
   {id:3,l:"Kitchen safety & cooking",c:["Kitchen safety: hot surfaces, sharp knives","Make a simple snack: sandwich, fruit salad","Measure ingredients using cups and spoons"]},
   {id:5,l:"Household management",c:["Plan and cook a simple meal","Understand a weekly shopping list and budget","Basic sewing: sew a button, mend a small tear"]},
-  {id:7,l:"Independent living skills",c:["Plan meals for a week on a budget","Read a utility bill","Time management: use a diary and plan a week"]}
+  {id:6,l:"Home management skills",c:["Manage a simple weekly chore roster","Clean a bathroom and kitchen safely","Understand food storage: fridge, freezer, pantry","Read a recipe and double or halve quantities","First-line home repairs: change a bulb, tighten a screw"]},
+  {id:7,l:"Independent living skills",c:["Plan meals for a week on a budget","Read a utility bill","Time management: use a diary and plan a week"]},
+  {id:8,l:"Advanced home independence",c:["Manage a personal monthly budget","Understand a tenancy agreement or household contract (basic)","Write a formal letter or complaint","Navigate public transport independently","Basic cooking for a family: plan, shop, cook a 3-course meal"]},
+  {id:9,l:"Life readiness",c:["Prepare a CV and cover letter","Understand tax, insurance and financial responsibilities","Plan and execute a multi-day trip or event independently","Run a household: utilities, groceries, cleaning on a budget","Manage personal health: GP appointments, prescriptions"]}
  ]},
  {t:"Social & Emotional Learning",grades:[
   {id:1,l:"Feelings & friendship",c:["Name feelings: happy, sad, angry, scared, proud","Kind vs unkind words","Take turns; listen when others speak"]},
+  {id:2,l:"Caring and sharing",c:["Understand that actions affect other people's feelings","Practise gratitude: say thank you and mean it","Repair a friendship after a disagreement","Understand fairness: same treatment vs what each person needs","Ask for help and offer help to others"]},
   {id:3,l:"Conflict & empathy",c:["Understand another person's point of view","Calm-down strategies: breathe, count, walk away","How to apologise sincerely"]},
   {id:5,l:"Identity & self-awareness",c:["Understand your own strengths and areas to grow","Positive self-talk; growth mindset vs fixed mindset","Goal-setting: SMART goals"]},
-  {id:7,l:"Relationships & consent",c:["Healthy friendships: respect, trust, honesty","Understand consent: freely given, reversible, informed","Where to get help: trusted adults, helplines"]}
+  {id:6,l:"Peer influence & resilience",c:["Understand peer pressure and how to respond","Strategies for dealing with bullying: online and offline","Build resilience: bounce back after disappointment or failure","Manage stress: exercise, sleep, talking to someone","Understanding media influence on self-image"]},
+  {id:7,l:"Relationships & consent",c:["Healthy friendships: respect, trust, honesty","Understand consent: freely given, reversible, informed","Where to get help: trusted adults, helplines"]},
+  {id:8,l:"Ethics & responsibility",c:["Understand personal responsibility in relationships","Digital wellbeing: screen time, social media impact","Stand up for others: being an ally vs a bystander","Understand mental health: anxiety, depression — when to seek help","Kenya's laws relevant to young people: age of majority, rights"]},
+  {id:9,l:"Civic life & adult readiness",c:["Understand voting, civic duties and democratic participation","Personal values: articulate what you stand for","Manage life transitions: moving, changing school, new responsibilities","Understanding grief and loss","Plan for the future: career exploration, further education"]}
  ]}
 ]},
 {id:"finance",name:"Financial Literacy",icon:"₿",cat:"life",desc:"Money management · Budgeting · Investing · Business",priority:3,
 topics:[
  {t:"Money & Budgeting",grades:[
   {id:1,l:"What is money?",c:["Coins and notes: identify Kenyan shillings","Needs vs wants: food is a need, a toy is a want","Count small amounts of money"]},
+  {id:2,l:"Counting and comparing money",c:["Count and add up coins to make a given amount","Understand change: if something costs Ksh 15 and you pay Ksh 20, you get Ksh 5 back","Compare two prices: which is cheaper / which is more expensive?","Understand that working earns money","Simple saving: put some money in a jar each week"]},
   {id:3,l:"Saving & spending",c:["Earn, save, spend, give — the four uses of money","Simple budget: pocket money in, spending out","Compare prices: which is better value?"]},
   {id:5,l:"Budgeting & banking",c:["Income and expenses — track for one week","What a bank account does","Simple interest: money grows when you save"]},
   {id:7,l:"Investing & business basics",c:["Risk and return: higher risk may mean higher reward","Types of investment: stocks, bonds, property","Profit = Revenue − Cost"]},
@@ -3352,9 +3458,13 @@ topics:[
 topics:[
  {t:"Making & Creating",grades:[
   {id:1,l:"Drawing & colour mixing",c:["Hold pencil and paintbrush correctly","Primary colours: mix to make secondary","Observational drawing from real objects","Experiment with texture: rubbing, printing"]},
+  {id:2,l:"Shape, line & pattern",c:["Draw from imagination: people, animals, places","Explore warm and cool colours","Create repeating patterns using stamps or drawing","Weaving and simple printmaking","Introduction to collage: cut and paste images to tell a story"]},
   {id:3,l:"Composition & media",c:["Rule of thirds in composition","Still life drawing from observation","Watercolour wash and resist techniques","Collage: tear and cut, mix textures"]},
+  {id:4,l:"African art & craft",c:["Kenyan traditional art: Maasai beadwork patterns","Create geometric patterns inspired by kanga / kitenge designs","Clay modelling: pinch pot or coil pot","Batik technique: wax-resist dyeing","Illustrate a story or poem using pen and watercolour"]},
   {id:5,l:"Art history & techniques",c:["Impressionism: Monet, Degas — light and colour","Cubism: Picasso — multiple viewpoints","Create in the style of a chosen artist","Mixed media: combine drawing, painting, collage"]},
+  {id:6,l:"Sculpture & 3D art",c:["Wire sculpture: create a figure in motion","Papier-mâché: build a 3D form over an armature","African sculpture: study works from Benin, Kongo, Kenya","Photography basics: composition, light, framing","Create a photo essay on a chosen theme"]},
   {id:7,l:"Design & printmaking",c:["Design process: brief → ideas → prototype → evaluate","Relief printing (lino or polystyrene)","One-point perspective drawing","Typography: design a poster"]},
+  {id:8,l:"Digital art & advanced techniques",c:["Introduction to digital art tools (Canva, GIMP, or similar)","Two-point perspective drawing","Advanced printmaking: layered colour prints","Study a living Kenyan/African artist and respond to their work","Create a digital portfolio of best work"]},
   {id:9,l:"Portfolio & critical studies",c:["Develop a personal project with own theme","Write an artist statement","Analyse a major artwork using formal elements","Understand art as cultural commentary"]}
  ]}
 ]},
@@ -3364,9 +3474,13 @@ topics:[
 topics:[
  {t:"Music Elements & Performance",grades:[
   {id:1,l:"Pulse, rhythm & voice",c:["Feel a steady pulse; clap along to music","Loud and soft; high and low pitch","Sing simple songs in tune","Identify: drums, guitar, piano, violin by sound"]},
+  {id:2,l:"Rhythm patterns & simple songs",c:["Clap and tap rhythm patterns accurately","Understand fast (allegro) and slow (adagio) tempo","Sing a simple melody in tune with others","Play a rhythm pattern on a percussion instrument","Identify verse and chorus in a song"]},
   {id:3,l:"Reading music & instruments",c:["Treble clef; note values: crotchet, minim, semibreve","Play a simple melody on recorder or xylophone","African music: polyrhythm and call-and-response","Ensemble: keep time with others"]},
+  {id:4,l:"Harmony & music reading",c:["Reading notes on the treble clef stave: EGBDF/FACE","Simple two-part harmony: singing or playing","Understand time signatures: 4/4, 3/4, 2/4","Compose a 4-bar rhythm using note values","Study a famous composer: Mozart, Beethoven, or Fela Kuti"]},
   {id:5,l:"African music traditions",c:["Benga, Taarab, Ohangla — Kenyan music genres","Instruments: nyatiti, kayamba, marimba","Traditional music's role in ceremony and community","Compare African and Western musical structures"]},
+  {id:6,l:"Music theory & ensemble",c:["Major and minor scales: sound and mood difference","Chord triads: I, IV, V in a major key","Perform in an ensemble: two or more parts simultaneously","Music from different world cultures: Indian, Latin, Jazz","Analyse how music creates emotion in film scores"]},
   {id:7,l:"Composition & music technology",c:["Compose an 8-bar melody using a pentatonic scale","Verse, chorus, bridge structure","Record music digitally using GarageBand or Audacity","Analyse music using: texture, timbre, dynamics, tempo"]},
+  {id:8,l:"Advanced composition & criticism",c:["Compose a 16-bar piece with harmony and dynamics","Arrange a well-known melody for two instruments","Analyse a piece of music in essay form","Music and identity: how music reflects culture and politics","Extended study: choose one genre (Jazz, Classical, Afrobeats) and present a 10-minute talk"]},
   {id:9,l:"Critical analysis & extended study",c:["Compare two contrasting music traditions","Research the life and work of a significant composer","Write a programme note for a piece of music","Music and social change: music as protest and identity"]}
  ]}
 ]},
@@ -3376,9 +3490,13 @@ topics:[
 topics:[
  {t:"Physical Skills & Sports",grades:[
   {id:1,l:"Movement & body awareness",c:["Run, jump, hop, skip, throw, catch","Balance on different body parts","Fast/slow, high/low, forwards/backwards","Participate in group physical play"]},
+  {id:2,l:"Coordination & partner games",c:["Throw and catch with a partner over 5 metres","Kick a ball with dominant and non-dominant foot","Play simple relay races: baton passing","Introduction to swimming or water safety (if available)","Traditional Kenyan games: Bladder, Kati — rules and participation"]},
   {id:3,l:"Ball skills & team games",c:["Throw overarm with control; catch reliably","Dribble a ball (hands and feet)","Basic rules of football and basketball","Traditional Kenyan games: Kati, Bladder, Mweso — rules and play"]},
+  {id:4,l:"Skill development & mini-sports",c:["Striking skills: bat, racquet or club","Serve and rally in tennis or badminton","Rules and positions in netball or volleyball","Swimming: 25m front crawl or basic stroke (if available)","Health-related fitness: understand resting heart rate"]},
   {id:5,l:"Athletics & fitness",c:["Sprint and distance running technique","Long jump: run-up, take-off, landing","Fitness components: cardio, strength, flexibility","Design and follow a personal fitness plan"]},
+  {id:6,l:"Sport & teamwork",c:["Tactics in team sports: man-marking, zonal defence","Athletics: shot put, high jump, javelin technique and safety","Gymnastics: sequence on floor with rolls, jumps, balances","Understand the Olympic and Commonwealth Games","Kenya's athletics heritage: discuss famous Kenyan runners"]},
   {id:7,l:"Advanced sport & tactics",c:["Position-specific skills in chosen sport","Tactical understanding: attack vs defence","Officiating: referee a junior game","Understand training principles: FITT"]},
+  {id:8,l:"Fitness science & performance",c:["Understand VO₂ max and training zones","Design a 4-week training programme for a chosen goal","Sports psychology: motivation, goal-setting, visualisation","Nutrition for sport: macronutrients, hydration, timing","Analyse your own performance using video review"]},
   {id:9,l:"Sport science & leadership",c:["Basic anatomy for sport: agonist/antagonist muscles","Lead a warm-up for peers","Plan a coaching session for a skill","Evaluate personal performance and set SMART goals"]}
  ]}
 ]},
@@ -3388,9 +3506,14 @@ topics:[
 topics:[
  {t:"Basic First Aid",grades:[
   {id:1,l:"Getting help in an emergency",c:["Know your home address and parent's phone number by heart","Emergency numbers in Kenya: 999, 112, 0800 723 253","Tell a trusted adult if someone is hurt","Never touch blood without gloves if possible"]},
+  {id:2,l:"Safety in the home",c:["Identify 5 hazards in the home and explain how to avoid them","Electric safety: never touch sockets with wet hands","Road safety: look right, left, right before crossing","Water safety: never swim alone; understand currents","Fire safety: what to do if you smell smoke — get out, stay low, call for help"]},
   {id:3,l:"Cuts, burns & choking",c:["Minor cuts: clean with water, apply pressure, cover with plaster","Burns: cool under running water for 10 minutes — no ice, no butter","Nosebleed: lean forward, pinch soft part of nose","Choking child: 5 back blows between shoulder blades"]},
+  {id:4,l:"Fractures, sprains & fainting",c:["Fractures: immobilise, do not move the limb, seek help","Sprain: RICE — Rest, Ice, Compression, Elevation","Fainting: lay the person flat, raise their legs, loosen tight clothing","Heat exhaustion: move to shade, cool with water, give fluids slowly","Allergic reaction: signs of anaphylaxis; use an EpiPen if prescribed"]},
   {id:5,l:"CPR & unconsciousness",c:["DRSABC: Danger, Response, Send for help, Airway, Breathing, Circulation","Adult CPR: 30 compressions, 2 breaths, rate 100–120 bpm","Recovery position: when to use it","Do not move a person who may have a spinal injury"]},
-  {id:7,l:"Wound management & tropical emergencies",c:["Wound care: clean, close, cover, check for infection","Malaria symptoms: fever, chills, headache — seek medical care early","Dehydration: signs and oral rehydration therapy (ORS)","Snake bite (Kenya): immobilise limb, keep below heart level, carry to hospital"]}
+  {id:6,l:"Bleeding control & shock",c:["Severe bleeding: apply firm direct pressure; do not remove the dressing","Tourniquet: when and how to apply one correctly","Recognise shock: pale, cold, clammy skin; rapid pulse; confusion","Treatment for shock: keep warm, lay flat, raise legs, reassure","Eye injuries: flush with clean water, cover but do not press"]},
+  {id:7,l:"Wound management & tropical emergencies",c:["Wound care: clean, close, cover, check for infection","Malaria symptoms: fever, chills, headache — seek medical care early","Dehydration: signs and oral rehydration therapy (ORS)","Snake bite (Kenya): immobilise limb, keep below heart level, carry to hospital"]},
+  {id:8,l:"Mental health first aid",c:["Recognise signs of a mental health crisis in a peer","How to approach someone who seems distressed: ALGEE method","Suicide awareness: warning signs and what to say","Substance abuse: recognise the signs and how to help","Self-harm: how to respond with calm, non-judgmental support"]},
+  {id:9,l:"Advanced life-saving skills",c:["AED (defibrillator): understand when and how to use one","Childbirth emergency: basic steps if birth is imminent","Mass casualty: triage basics — how to prioritise multiple casualties","Advanced snake and scorpion bite management","Write and practise a family emergency plan: fire, flood, medical crisis"]}
  ]}
 ]},
 
@@ -3399,9 +3522,13 @@ topics:[
 topics:[
  {t:"Philosophy for Children (P4C)",grades:[
   {id:1,l:"Wondering & asking big questions",c:["What is a question? What is an answer?","Are there questions with no answer?","Philosophy circle: listen, respond, agree, disagree respectfully"]},
+  {id:2,l:"Truth & stories",c:["Is a story true if it didn't really happen?","What is the difference between a fact and an opinion?","Could two people look at the same thing and see something different?","Philosophy through picture books: discuss what the book is really about","Can something be both good and bad at the same time?"]},
   {id:3,l:"What is real & what is fair?",c:["Is a dream real?","What does 'fair' mean?","Equity vs equality","Plato's cave (accessible version)"]},
+  {id:4,l:"Right and wrong",c:["What makes an action right or wrong?","The golden rule: treat others as you want to be treated","Is it ever OK to lie? Explore exceptions","Consequences vs intentions: does the outcome decide if something was right?","Kenya's constitution: rights and responsibilities of citizens"]},
   {id:5,l:"Minds, identity & free will",c:["Do animals have minds?","What makes you the same person as a baby?","The trolley problem: discuss and articulate a position"]},
+  {id:6,l:"Justice & society",c:["What is justice? Restorative vs retributive approaches","Is there a duty to help people who are suffering?","Environmental ethics: do we have duties to non-human nature?","African philosophy: Ubuntu — 'I am because we are'","Debate: Is social media making society better or worse?"]},
   {id:7,l:"Applied ethics",c:["Utilitarianism: greatest happiness","Deontology: rules that should never be broken","Apply to: AI rights, climate ethics, global poverty"]},
+  {id:8,l:"Political philosophy",c:["What is power, and who should have it?","Democracy vs authoritarianism: arguments on both sides","Human rights: origin, scope and limits","Is civil disobedience ever justified?","Examine a real Kenyan political issue through a philosophical lens"]},
   {id:9,l:"Epistemology & logic",c:["What is knowledge? Plato's JTB account","Formal logic: modus ponens and modus tollens","20 common informal fallacies with examples"]}
  ]}
 ]}
@@ -3427,48 +3554,142 @@ const MASTERY={
     3:["Writes a full narrative with introduction and resolution","Plans writing before drafting","Uses inverted commas for speech correctly","Summarises a non-fiction paragraph","Reads non-fiction texts for specific information"],
     4:["Writes a persuasive text with reasons and evidence","Uses complex sentences with subordinate clauses","Identifies audience and purpose in texts","Analyses why an author made language choices","Uses relative clauses correctly"],
     5:["Writes a 5-paragraph essay with clear structure","Identifies and analyses poetic techniques","Evaluates bias and perspective in non-fiction","Uses semicolons and colons correctly","Produces accurate analysis using the PEE structure"],
+    6:["Uses subjunctive mood correctly in formal writing","Applies sophisticated punctuation: semicolons, colons, dashes","Analyses grammatical choices for stylistic effect","Writes in a range of genres with consistent voice","Identifies and names 5+ rhetorical devices in texts"],
     7:["Writes an analytical essay with thesis statement","Embeds and analyses textual quotations","Compares two texts using comparative connectives","Analyses the effects of grammatical choices","Uses the passive voice and complex syntax deliberately"],
+    8:["Analyses a writer's syntactic choices at sentence level","Uses etymology and morphology to expand vocabulary","Identifies and deploys anaphora, tricolon and antithesis","Writes in the style of a named author","Produces a comparative essay on two literary texts"],
     9:["Writes a thesis-driven literary essay at GCSE standard","Close reads at word, sentence and text level","Applies multiple critical perspectives","Produces extended research writing with citations","Edits and proofreads to publication standard"]
   },
   science:{
     1:["Names and sorts 10+ common animals","Names parts of a plant: roots, stem, leaves, flower","Describes 3 basic needs of living things","Identifies 5 senses and their body parts"],
+    2:["Classifies materials as hard/soft, transparent/opaque, flexible/rigid","Describes 3 properties that make a material useful","Explains the difference between living, dead and never-alive","Names and explains a simple food chain","Identifies natural vs manufactured materials"],
     3:["Explains the 7 life processes (MRS NERG)","Describes a simple food chain with producer → consumer","Names major bones in the human skeleton","Classifies animals as vertebrate or invertebrate"],
+    4:["Describes the journey of food through the digestive system","Explains the function of enzymes at a concept level","Explains the states of matter and gives examples of each","Describes at least one reversible and one irreversible change"],
     5:["Describes the key differences between animal and plant cells","Explains sexual reproduction in plants","Calculates speed using the formula Speed = Distance ÷ Time","Describes separating mixtures: filtration, evaporation"],
+    6:["Describes a complete electrical circuit and its components","Explains the difference between series and parallel circuits","Applies Ohm's Law: V = IR to simple problems","Names three climate zones and their key features","Explains causes and effects of deforestation"],
     7:["Names organelles and their functions","Explains diffusion and osmosis with examples","Balances simple chemical equations","Describes how waves transfer energy"],
+    8:["Explains DNA, chromosomes, genes and alleles","Draws and interprets a Punnett square","Describes the process of natural selection with an example","Explains electromagnetic induction","Describes alpha, beta and gamma radiation and their properties"],
     9:["Explains mitosis and meiosis and their purposes","Applies genetics: Punnett squares and inheritance","Describes natural selection with a real example","Explains nuclear fission and fusion"]
   },
   geography:{
     1:["Uses N, S, E, W to describe directions","Draws a simple map with a key","Names 3 features of their local area"],
+    2:["Names Kenya's two rainy seasons and when they occur","Reads a simple weather chart","Describes push and pull factors for migration","Names 3 types of settlement: village, town, city"],
     3:["Uses grid references (letter + number)","Names 5 major physical features of Kenya","Explains Kenya's two rainy seasons"],
+    4:["Explains how rivers erode and deposit material","Describes the cause of earthquakes and volcanoes","Explains how the Great Rift Valley was formed","Identifies renewable vs non-renewable resources"],
     5:["Uses an 8-point compass accurately","Interprets contour lines on a map","Explains the difference between renewable and non-renewable resources"],
+    6:["Names the major climate zones and their biomes","Explains causes and consequences of deforestation","Describes rock types: igneous, sedimentary, metamorphic","Explains the water cycle with all key stages"],
     7:["Uses 6-figure grid references","Compares development between two countries using HDI","Explains the causes and effects of urbanisation"],
+    8:["Explains plate tectonics and names the types of boundaries","Describes how to prepare for and respond to a natural hazard","Analyses a country's development using multiple indicators","Explains globalisation and at least 2 effects on Kenya"],
     9:["Evaluates solutions to climate change","Analyses a country's sustainable development","Explains globalisation and its effects on Kenya"]
   },
   history:{
+    1:["Names 3 people who help their community","Describes what their family does together","Explains what a community is in their own words"],
+    2:["Describes a family tradition or story passed down","Explains what oral history means","Names a local landmark and its significance"],
     3:["Describes key features of Ancient Egypt","Explains democracy in Ancient Greece","Names 3 achievements of Ancient Rome"],
+    4:["Describes the Bantu, Nilotic and Cushitic migrations into Kenya","Names 2 great pre-colonial kingdoms with one achievement each","Explains the importance of the Swahili coast to trade"],
     5:["Explains causes of the Crusades","Describes the Silk Road and its importance","Names 2 major African kingdoms and their achievements"],
+    6:["Explains when and why Britain colonised Kenya","Describes the Mau Mau movement and its aims","Identifies key figures in Kenyan independence"],
     7:["Explains causes of the First and Second World Wars","Describes the transatlantic slave trade","Analyses how industrialisation changed society"],
+    8:["Explains changes to Kenya's constitution since 1963","Describes Kenya's role in the East African Community","Analyses how Kenya's economy has diversified since independence"],
     9:["Evaluates the Cold War's impact on Africa","Analyses decolonisation movements","Discusses climate change as a historical process"]
   },
   finance:{
     1:["Identifies Kenyan coins and notes","Distinguishes needs from wants","Counts small amounts of money accurately"],
+    2:["Calculates change from a given amount","Adds up coins to make a target sum","Identifies which of two prices is better value","Explains why people work to earn money"],
     3:["Explains the four uses of money: earn, save, spend, give","Creates a simple budget","Compares prices to find better value"],
+    4:["Describes what a business does","Explains the difference between a product and a service","Identifies a real problem and describes a business idea to solve it"],
     5:["Calculates simple interest","Tracks income and expenses for one week","Explains what a bank account does"],
+    6:["Conducts simple market research and summarises findings","Creates a simple business plan with idea, price, cost and profit","Calculates profit and loss from given data"],
     7:["Explains risk vs return in investments","Calculates profit using Revenue − Cost","Designs a simple business idea"],
+    8:["Explains the difference between sole trader, partnership and limited company","Applies the 4Ps of marketing to a real or imagined product","Calculates a break-even point from given data"],
     9:["Reads and interprets a payslip","Explains VAT and income tax in Kenya","Writes a simple business plan with financial projections"]
   },
   languages:{
     1:["Greets and introduces themselves in the target language","Counts to 10 in the target language","Names 5 colours in the target language","Names immediate family members"],
+    2:["Names 10 common objects in the target language","Asks and answers 'What is this?' in the target language","Counts to 20 in the target language","Names 5 animals in the target language"],
     3:["Holds a simple 4-line conversation","Names days of the week and months","Describes daily routine in present tense","Understands short spoken sentences"],
+    4:["Writes 5 sentences about themselves in the target language","Uses simple adjectives correctly (agreement where applicable)","Understands a short 3-sentence spoken passage","Describes their home or school in the target language"],
     5:["Writes a short paragraph about themselves","Uses present and past tense correctly","Knows 150+ vocabulary words","Reads a short simple text with understanding"],
+    6:["Reads a short article in the target language and summarises it","Uses at least 2 tenses accurately in writing","Holds a 2-minute conversation on a familiar topic","Knows 250+ vocabulary words in the target language"],
     7:["Writes a letter or short essay in the target language","Discusses topics: food, travel, school, family","Uses 3 tenses (past/present/future)","Understands spoken passages at intermediate level"],
+    8:["Writes a 200-word essay in the target language on a chosen topic","Uses comparative and superlative structures","Understands an authentic podcast or video segment (with support)","Corrects grammatical errors in their own writing"],
     9:["Expresses opinions and defends arguments","Understands complex written and spoken texts","Uses a wide range of grammar structures accurately","Can converse fluidly on familiar topics"]
   },
   lifeskills:{
     1:["Follows morning routine independently: teeth, face, tidy room","Dresses and undresses without help","Handles cup, plate and cutlery safely","Names 5 feelings: happy, sad, angry, scared, proud","Uses kind words; knows what unkind words feel like","Takes turns and listens when others speak"],
+    2:["Makes their bed and tidies room independently","Helps set and clear the table without prompting","Sorts laundry into colours and whites","Waters a plant and explains why plants need water","Explains the difference between a need and a want","Says please and thank you consistently without reminding"],
     3:["Makes a simple snack safely (sandwich or fruit salad)","Measures ingredients using cups and spoons","Understands kitchen safety: hot surfaces and sharp knives","Explains another person's point of view in a disagreement","Uses at least one calm-down strategy: breathing, counting, walking away","Can apologise sincerely and explain why"],
+    4:["Follows a simple recipe with minimal supervision","Understands kitchen safety and uses knives safely with supervision","Describes at least one strategy for resolving conflict fairly","Explains what peer pressure is and describes a way to resist it","Sets a personal goal and takes at least one step toward it"],
     5:["Plans and cooks a simple meal independently","Understands a weekly shopping list and budget","Completes a basic sewing task: sew a button or mend a small tear","Describes personal strengths and areas to grow","Uses positive self-talk and explains growth vs fixed mindset","Sets a SMART goal and describes steps to achieve it"],
-    7:["Plans meals for a week within a set budget","Reads and interprets a utility bill","Uses a diary or planner to manage a full week","Explains what makes a friendship healthy: respect, trust, honesty","Explains consent: freely given, reversible, informed","Knows where to get help: trusted adults and relevant helplines"]
+    6:["Cleans a bathroom and kitchen to a basic standard","Understands food storage: fridge, freezer, pantry rules","Doubles or halves a recipe correctly","Explains what bullying is and describes how to respond","Describes at least 3 strategies for managing stress"],
+    7:["Plans meals for a week within a set budget","Reads and interprets a utility bill","Uses a diary or planner to manage a full week","Explains what makes a friendship healthy: respect, trust, honesty","Explains consent: freely given, reversible, informed","Knows where to get help: trusted adults and relevant helplines"],
+    8:["Manages a simple monthly personal budget","Writes a formal letter or complaint","Navigates public transport independently in Nairobi","Explains the warning signs of an unhealthy relationship","Describes what mental health is and when to seek help"],
+    9:["Prepares a basic CV and cover letter","Explains tax, insurance and financial responsibilities of an adult","Plans and executes a multi-day trip or event independently","Articulates their personal values clearly in a 2-minute speech","Describes the steps to access healthcare in Kenya independently"]
+  },
+  ict:{
+    1:["Identifies the main parts of a computer: screen, keyboard, mouse","Opens and saves a file","Knows at least 2 online safety rules"],
+    2:["Types a short sentence using a keyboard","Understands that an algorithm is a set of instructions","Controls a Scratch sprite using block code"],
+    3:["Uses a search engine to find information on a chosen topic","Writes and sends an email with a subject and polite greeting","Explains what the internet is in simple terms"],
+    4:["Creates a Scratch project with events, loops and a variable","Creates a presentation with headings, images and transitions","Uses a spreadsheet to enter data and a basic SUM formula"],
+    5:["Creates a document with headings, images and a table","Uses SUM, AVERAGE and COUNT formulas in a spreadsheet","Explains the principles of a good presentation design","Describes how to stay safe online: passwords, privacy settings"],
+    6:["Writes a Python program with variables, input and print","Uses if/else logic in a Python script","Explains how the internet works: IP, DNS, HTTP","Identifies types of cybersecurity threats: phishing, malware"],
+    7:["Writes a Python program with a loop and a function","Explains binary: converts a 4-bit number to decimal","Explains what a network is and names its key components","Describes how data is stored and represented: ASCII, pixels"],
+    8:["Writes a Python program using lists and file handling","Writes a basic SQL SELECT query","Builds a simple webpage using HTML and CSS","Explains and demonstrates good cybersecurity practice"],
+    9:["Builds a functioning Python program with functions, lists and file I/O","Writes SQL queries with WHERE and JOIN clauses","Creates a multi-page website with CSS styling","Explains database design: primary keys, relationships"]
+  },
+  art:{
+    1:["Holds pencil and paintbrush with correct grip","Mixes primary colours to make secondary colours","Draws from observation (a piece of fruit or household object)","Creates a texture rubbing from a natural surface"],
+    2:["Creates a repeating pattern using at least 2 shapes","Uses warm and cool colours deliberately in a piece of work","Tears and cuts paper to make a collage with a clear subject","Draws a person with head, body, arms, legs and facial features"],
+    3:["Applies the rule of thirds in a composition","Completes a still life drawing from direct observation","Uses a watercolour wash and wax resist technique","Describes what they see in a work of art using 3+ adjectives"],
+    4:["Creates a piece inspired by a Kenyan or African art tradition","Models a simple form in clay using pinch or coil method","Uses geometric pattern accurately in a design","Describes the cultural context of one African art tradition"],
+    5:["Creates a work in the style of an Impressionist or Cubist artist","Combines drawing, painting and collage in one piece","Names 3 major art movements and one key artist from each","Analyses a piece of art using formal elements: line, shape, colour, texture"],
+    6:["Creates a 3D sculpture using wire or papier-mâché","Takes a series of 5+ photographs with intentional composition","Describes the work of at least one African sculptor or photographer","Explains the design process: brief, ideas, prototype, evaluate"],
+    7:["Completes a relief print with at least 2 layers or colours","Draws a room or street in one-point perspective accurately","Designs a typographic poster for a real purpose","Writes a 100-word analysis of a major artwork"],
+    8:["Creates a digital artwork using design software","Draws a scene or object in two-point perspective","Produces a layered colour print with registration","Writes an artist statement for their own work"],
+    9:["Develops a personal project with a clear theme and rationale","Presents a portfolio of 5+ finished pieces with written reflections","Writes a 200-word critical analysis of a major artwork","Explains how art reflects culture, politics and identity"]
+  },
+  music:{
+    1:["Claps a steady pulse to a piece of music without losing the beat","Identifies loud/soft and high/low pitch in music","Sings a simple song in tune from memory","Names 4 instruments by sound"],
+    2:["Claps a 4-beat rhythm pattern accurately","Identifies verse and chorus in a song","Sings a simple melody with others in time","Plays a 4-beat rhythm pattern on a percussion instrument"],
+    3:["Reads note values: crotchet, minim and semibreve","Plays a simple 8-note melody on recorder or xylophone","Explains what call-and-response means in African music","Keeps time with a group without rushing or dragging"],
+    4:["Reads notes on the treble clef stave (EGBDF / FACE lines and spaces)","Composes a 4-bar rhythm using at least 3 different note values","Identifies and describes the texture of a piece of music","Names one major composer and describes one of their works"],
+    5:["Identifies at least 2 Kenyan music genres and their key features","Names 3 traditional Kenyan instruments and how they are played","Explains the role of music in a Kenyan cultural ceremony","Compares African and Western musical structures in writing"],
+    6:["Distinguishes between major and minor by ear","Identifies chords I, IV and V in a major key","Performs a piece with at least two simultaneous parts","Describes how music creates mood in a film score"],
+    7:["Composes an 8-bar melody using a pentatonic scale","Records a piece of music digitally (GarageBand or similar)","Analyses a piece of music using tempo, dynamics, texture and timbre","Explains verse-chorus-bridge structure with an example"],
+    8:["Composes a 16-bar piece with melody and harmony","Analyses a piece of music in a structured paragraph","Names one major music tradition and describes its history and key features","Explains how music has been used for social change"],
+    9:["Compares two contrasting music traditions in an essay","Researches and presents on a significant composer or musician","Writes a programme note for a piece of music","Explains and gives examples of music as cultural identity"]
+  },
+  pe:{
+    1:["Runs, jumps, hops and skips with coordination","Catches a large ball thrown gently from 2 metres","Balances on one foot for 5 seconds","Participates enthusiastically in group physical play"],
+    2:["Catches a ball thrown from 4 metres with control","Kicks a ball toward a target with dominant foot","Completes a relay race baton exchange correctly","Plays Kati or Bladder following the rules"],
+    3:["Throws overarm accurately to a partner 8 metres away","Dribbles a football in a straight line without losing control","Explains the basic rules of football and basketball","Names and plays 2 traditional Kenyan games"],
+    4:["Strikes a ball with a bat or racquet with control","Rallies with a partner 5 times in tennis or badminton","Names and plays at least 2 positions in netball or volleyball","Measures their resting heart rate and explains what it means"],
+    5:["Runs 100m sprint with correct technique","Performs a standing long jump with run-up and landing","Names the 5 components of fitness and gives an example of each","Designs and follows a weekly personal fitness plan"],
+    6:["Applies a tactical strategy in a team sport (e.g. zonal defence)","Performs a gymnastics sequence with 3+ elements on the floor","Explains Kenya's athletics heritage and names 2 famous Kenyan runners","Describes the rules of one athletics event: high jump, shot put or javelin"],
+    7:["Demonstrates position-specific skills in a chosen sport","Officiates a junior game applying the rules correctly","Explains 3 of the FITT principles: Frequency, Intensity, Time, Type","Describes the difference between aerobic and anaerobic exercise"],
+    8:["Designs a 4-week training programme for a specific fitness goal","Calculates target heart rate zone for aerobic training","Explains 3 psychological strategies used in sport","Describes the role of macronutrients in sports performance"],
+    9:["Leads a warm-up for a group of peers","Plans and delivers a 15-minute coaching session for a specific skill","Evaluates their own performance in sport using 3 specific criteria","Explains the basic anatomy of a named muscle group used in sport"]
+  },
+  firstaid:{
+    1:["Knows home address and a parent's phone number by heart","Can recite at least 2 Kenyan emergency numbers","Knows to tell a trusted adult if someone is hurt","Understands not to touch blood without protection"],
+    2:["Names 5 home hazards and explains how to avoid them","Explains what to do if there is a fire at home","Demonstrates road safety: look right, left, right before crossing","Explains what to do if someone is unconscious (call for help, don't move)"],
+    3:["Cleans and covers a minor cut correctly","Explains the correct treatment for a burn (cool water, 10 mins)","Demonstrates the correct position for treating a nosebleed","Explains what to do if someone is choking (5 back blows)"],
+    4:["Applies RICE for a sprain: Rest, Ice, Compression, Elevation","Explains how to treat a fracture: immobilise, do not move, seek help","Describes the signs of heat exhaustion and how to treat it","Explains the signs of an allergic reaction"],
+    5:["Performs the DRSABC check in correct order","Demonstrates or describes 30-compression CPR at the correct rate","Explains when and how to use the recovery position","Explains why a person with a spinal injury should not be moved"],
+    6:["Describes how to control severe bleeding with direct pressure","Explains when to apply a tourniquet and how","Lists the signs of shock and describes the treatment","Explains how to treat an eye injury"],
+    7:["Describes how to clean and dress a wound to prevent infection","Lists the symptoms of malaria and explains when to seek care","Explains oral rehydration therapy (ORS) for dehydration","Describes the correct first response to a snake bite in Kenya"],
+    8:["Explains how to recognise a mental health crisis in a peer","Describes the ALGEE method for mental health first aid","Lists warning signs of self-harm and explains a calm response","Knows where to refer someone for mental health support in Kenya"],
+    9:["Explains when to use a defibrillator (AED) and the basic steps","Describes basic triage: how to prioritise when multiple people are hurt","Creates a written family emergency plan for 2 different scenarios","Explains advanced snake bite management: do's and don'ts"]
+  },
+  philosophy:{
+    1:["Asks at least one open question during a discussion","Listens to another person's answer before responding","Agrees or disagrees respectfully with a reason","Understands that some questions have no single correct answer"],
+    2:["Explains the difference between a fact and an opinion","Gives an example of something that can be seen differently by two people","Explains what a story teaches us (its theme or message)","Participates in a circle discussion for 5 minutes without interrupting"],
+    3:["Explains what 'fair' means in their own words","Distinguishes equity from equality with an example","Explains Plato's cave allegory in simple terms","Asks a question that starts a class discussion"],
+    4:["Explains what makes an action right or wrong (gives 2 criteria)","Discusses whether it is ever acceptable to lie, with reasoning","Distinguishes between judging by intentions vs consequences","Names one right in Kenya's constitution and explains it"],
+    5:["Articulates a position on the trolley problem with reasons","Explains what makes a person 'the same person' over time","Argues whether animals have minds, using evidence","Identifies a flaw in a given argument"],
+    6:["Explains Ubuntu philosophy and gives an example","Defines justice and compares restorative vs retributive approaches","Argues a position on environmental ethics with reasons","Identifies an assumption hidden in a given statement"],
+    7:["Explains utilitarianism with an example","Explains deontology with a rule that should never be broken","Applies one ethical framework to a real-world issue","Identifies an informal logical fallacy in an argument"],
+    8:["Explains a political philosophy: democracy or authoritarianism","Argues for or against civil disobedience with reasons","Analyses a real Kenyan political issue using 2 philosophical lenses","Distinguishes between descriptive and normative claims"],
+    9:["Explains Plato's justified true belief account of knowledge","Applies modus ponens and modus tollens correctly","Identifies at least 5 informal fallacies by name with examples","Writes a structured 300-word philosophical argument"]
   }
 };
 
@@ -5190,7 +5411,11 @@ let weekCustomLessons = {}; // saved per-date
 let weekDoneLessons   = new Set();
 let weekLessonNotes   = {}; // { sessionId: string }
 
-function wkDateStr(d){ return d.toISOString().slice(0,10); }
+function wkDateStr(d){
+  // Use local date parts to avoid UTC offset shifting the day
+  const yy=d.getFullYear(), mm=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+  return `${yy}-${mm}-${dd}`;
+}
 
 function getMondayForOffset(offset){
   const now = new Date();
@@ -5427,7 +5652,10 @@ function openWkLessonModal(dateStr, subjectId, lessonIdx, isCustom, isCarried){
     geography:getStudentGradeForSubject(currentStudentId,'geography'),
     finance:getStudentGradeForSubject(currentStudentId,'finance'),
   };
-  const dayOfWeek = new Date(dateStr).getDay(); // 0=Sun..6=Sat
+  // Parse dateStr (YYYY-MM-DD) directly to avoid UTC offset shifting the day (e.g. EAT = UTC+3)
+  const _dsParts = dateStr.split('-');
+  const _dsLocal = new Date(+_dsParts[0], +_dsParts[1]-1, +_dsParts[2]);
+  const dayOfWeek = _dsLocal.getDay(); // 0=Sun..6=Sat
   const dow = dayOfWeek === 0 ? 7 : dayOfWeek; // Mon=1
   let lesson;
   if(isCustom){
@@ -6152,22 +6380,244 @@ try{ const r=localStorage.getItem('lum_flags'); if(r) flagData=JSON.parse(r); }c
 function saveFlagData(){ try{ localStorage.setItem('lum_flags', JSON.stringify(flagData)); }catch(e){} }
 
 function getFlagKey(sid, key){ return !!(flagData[sid] && flagData[sid][key]); }
-function setFlagKey(sid, key, val){
+function getFlagReason(sid, key){ return (flagData[sid] && flagData[sid][key] && flagData[sid][key].reason) || ''; }
+function setFlagKey(sid, key, val, reason){
   if(!flagData[sid]) flagData[sid]={};
-  if(val) flagData[sid][key] = {ts: Date.now()};
+  if(val) flagData[sid][key] = {ts: Date.now(), reason: reason||''};
   else delete flagData[sid][key];
   saveFlagData();
 }
 
-// Toggle flag from curriculum tracker
-function toggleFlag(key){
-  if(!currentStudentId) return;
-  const val = !getFlagKey(currentStudentId, key);
-  setFlagKey(currentStudentId, key, val);
-  // Update button UI
-  const btn = document.querySelector(`.ct-flag-btn[data-fkey="${key}"]`);
-  if(btn) btn.classList.toggle('flagged', val);
+// ── Flag reason modal state ──
+let _flagModalKey = null;
+let _flagModalIsEdit = false;
+
+function openFlagReasonModal(key, checkpointLabel, isEdit){
+  _flagModalKey = key;
+  _flagModalIsEdit = !!isEdit;
+  const lbl = document.getElementById('frm-checkpoint-label');
+  if(lbl) lbl.textContent = checkpointLabel || '';
+  const ta = document.getElementById('flag-reason-text');
+  if(ta){
+    ta.value = getFlagReason(currentStudentId, key);
+    updateFlagCharCount();
+  }
+  document.getElementById('flag-reason-overlay').classList.remove('hidden');
+  setTimeout(()=>{ if(ta) ta.focus(); }, 120);
+}
+function closeFlagReasonModal(){
+  document.getElementById('flag-reason-overlay').classList.add('hidden');
+  _flagModalKey = null;
+}
+function updateFlagCharCount(){
+  const ta = document.getElementById('flag-reason-text');
+  const cc = document.getElementById('frm-char-count');
+  if(ta && cc) cc.textContent = ta.value.length;
+}
+document.addEventListener('DOMContentLoaded', function(){
+  const ta = document.getElementById('flag-reason-text');
+  if(ta) ta.addEventListener('input', updateFlagCharCount);
+  const ov = document.getElementById('flag-reason-overlay');
+  if(ov) ov.addEventListener('click', function(e){ if(e.target===ov) closeFlagReasonModal(); });
+});
+function saveFlagReason(){
+  if(!_flagModalKey || !currentStudentId) return;
+  const ta = document.getElementById('flag-reason-text');
+  const reason = ta ? ta.value.trim() : '';
+  setFlagKey(currentStudentId, _flagModalKey, true, reason);
+  // Update curriculum tracker flag button
+  const ctBtn = document.querySelector(`.ct-flag-btn[data-fkey="${_flagModalKey}"]`);
+  if(ctBtn) ctBtn.classList.add('flagged');
+  // Update reason chip in curriculum tracker
+  updateReasonChip(_flagModalKey, reason);
+  // Update mastery planner flag button + reason inline (no full re-render)
+  const mpBtn = document.querySelector(`.mc-flag-btn[data-fkey="${_flagModalKey}"]`);
+  if(mpBtn){
+    mpBtn.classList.add('flagged');
+    mpBtn.title='Remove flag';
+    // Update the reason text inside the mc-lbl
+    const mcItem = mpBtn.closest('.mc-item');
+    if(mcItem){
+      let reasonSpan = mcItem.querySelector('.mc-reason');
+      if(reason){
+        if(!reasonSpan){
+          reasonSpan = document.createElement('span');
+          reasonSpan.className='mc-reason';
+          const lbl = mcItem.querySelector('.mc-lbl');
+          if(lbl) lbl.appendChild(reasonSpan);
+        }
+        reasonSpan.textContent='🚩 '+reason;
+      } else if(reasonSpan){
+        reasonSpan.remove();
+      }
+    }
+  }
+  closeFlagReasonModal();
   renderNeedsAttention();
+}
+function updateReasonChip(key, reason){
+  // Find or create reason chip next to the flag button
+  const existing = document.querySelector(`.ct-reason-chip[data-rkey="${key}"]`);
+  if(reason){
+    const chip = existing || document.createElement('span');
+    chip.className='ct-reason-chip';
+    chip.dataset.rkey=key;
+    chip.title=reason;
+    chip.textContent=reason.length>30?reason.slice(0,30)+'…':reason;
+    chip.onclick = function(e){ e.stopPropagation(); openFlagReasonModal(key, '', true); };
+    if(!existing){
+      const btn = document.querySelector(`.ct-flag-btn[data-fkey="${key}"]`);
+      if(btn && btn.parentNode) btn.parentNode.insertBefore(chip, btn.nextSibling);
+    }
+  } else if(existing){
+    existing.remove();
+  }
+}
+
+// Toggle flag from curriculum tracker — now opens reason modal
+// Safe click handler for mastery flag buttons (avoids inline string escaping issues)
+function mcFlagClick(btn){
+  const key = btn.dataset.fkey;
+  const label = btn.dataset.label || '';
+  if(!key) return;
+  toggleFlag(key, label);
+}
+
+function toggleFlag(key, checkpointLabel){
+  if(!currentStudentId) return;
+  const isCurrentlyFlagged = getFlagKey(currentStudentId, key);
+  if(isCurrentlyFlagged){
+    // Unflag directly (no modal needed)
+    setFlagKey(currentStudentId, key, false);
+    // Update all flag buttons across views
+    document.querySelectorAll(`.ct-flag-btn[data-fkey="${key}"], .mc-flag-btn[data-fkey="${key}"]`).forEach(b=>{
+      b.classList.remove('flagged');
+      b.title = 'Flag — add reason for concern';
+    });
+    const chip = document.querySelector(`.ct-reason-chip[data-rkey="${key}"]`);
+    if(chip) chip.remove();
+    // Remove reason text from mastery planner item
+    const mpBtn = document.querySelector(`.mc-flag-btn[data-fkey="${key}"]`);
+    if(mpBtn){
+      const reasonSpan = mpBtn.closest('.mc-item')?.querySelector('.mc-reason');
+      if(reasonSpan) reasonSpan.remove();
+    }
+    renderNeedsAttention();
+  } else {
+    // Open modal to add reason before flagging
+    openFlagReasonModal(key, checkpointLabel, false);
+  }
+}
+
+// ─── CURRICULUM VIEW SWITCHER ───
+let currViewMode = 'bytopic';
+function switchCurrView(mode){
+  currViewMode = mode;
+  document.getElementById('curr-bytopic-panel').style.display  = mode==='bytopic'  ? '' : 'none';
+  document.getElementById('curr-bysubject-panel').style.display = mode==='bysubject' ? '' : 'none';
+  document.getElementById('cvt-bytopic').classList.toggle('on', mode==='bytopic');
+  document.getElementById('cvt-bysubject').classList.toggle('on', mode==='bysubject');
+  if(mode==='bysubject') renderBySubject();
+}
+
+// Grade pill colours (cycle through palette)
+const GRADE_COLOURS = ['#5B8DB8','#6BAA75','#C97B2E','#9B6BBF','#C9474A','#3A8FA0','#B07D3A','#5A7A4A','#8B6B8B'];
+
+function renderBySubject(){
+  const container = document.getElementById('curr-bysubject');
+  if(!container) return;
+  let html = '';
+  for(const subj of CURRICULUM){
+    // Gather all grades across all topics for this subject
+    const gradeMap = {}; // grade id → [{topicName, lesson, concepts}]
+    for(const topic of subj.topics){
+      for(const gr of topic.grades){
+        if(!gradeMap[gr.id]) gradeMap[gr.id] = [];
+        gradeMap[gr.id].push({t: topic.t, l: gr.l, c: gr.c || []});
+      }
+    }
+    const gradeIds = Object.keys(gradeMap).map(Number).sort((a,b)=>a-b);
+    if(!gradeIds.length) continue;
+
+    const gradeRows = gradeIds.map(g => {
+      const gMeta = GRADE_META[g] || {label: g===0?'Foundation':`Grade ${g}`, age:''};
+      const colour = g===0 ? '#8B6B8B' : GRADE_COLOURS[(g-1) % GRADE_COLOURS.length];
+      const topicsHtml = gradeMap[g].map(tp => `
+        <div class="bss-topic-name">${tp.t}</div>
+        <div class="bss-lesson">${tp.l}</div>
+        ${tp.c.length ? `<ul class="bss-concepts">${tp.c.map(c=>`<li>${c}</li>`).join('')}</ul>` : ''}
+      `).join('<hr style="border:none;border-top:1px dashed var(--border);margin:.35rem 0">');
+      return `<div class="bss-grade-row">
+        <div class="bss-grade-pill" style="background:${colour}">${gMeta.label}${gMeta.age?'<br><span style="font-weight:400;font-size:.6rem">'+gMeta.age+'</span>':''}</div>
+        <div class="bss-grade-topics">${topicsHtml}</div>
+      </div>`;
+    }).join('');
+
+    html += `<div class="bss-subject">
+      <div class="bss-subj-head" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.bss-subj-toggle').textContent=this.nextElementSibling.classList.contains('open')?'▾':'▸'">
+        <span class="bss-subj-icon">${subj.icon}</span>
+        <span class="bss-subj-name">${subj.name}</span>
+        <span class="bss-subj-toggle">▸</span>
+      </div>
+      <div class="bss-subj-body">${gradeRows}</div>
+    </div>`;
+  }
+  container.innerHTML = html || '<div class="empty">No curriculum data.</div>';
+}
+
+// ─── MASTERY VIEW SWITCHER ───
+let masteryViewMode = 'checkpoints';
+function switchMasteryView(mode){
+  masteryViewMode = mode;
+  document.getElementById('mastery-planner-content').style.display    = mode==='checkpoints' ? '' : 'none';
+  document.getElementById('mastery-fulltopics-content').style.display  = mode==='fulltopics'  ? '' : 'none';
+  document.getElementById('mvt-checkpoints').classList.toggle('on', mode==='checkpoints');
+  document.getElementById('mvt-fulltopics').classList.toggle('on', mode==='fulltopics');
+  if(mode==='fulltopics') renderMasteryFullTopics();
+}
+
+function renderMasteryFullTopics(){
+  const container = document.getElementById('mastery-fulltopics-content');
+  if(!container) return;
+  let html = '';
+  for(const subj of CURRICULUM){
+    // Gather grades across all topics
+    const gradeMap = {};
+    for(const topic of subj.topics){
+      for(const gr of topic.grades){
+        if(!gradeMap[gr.id]) gradeMap[gr.id] = [];
+        gradeMap[gr.id].push({t: topic.t, l: gr.l, c: gr.c || []});
+      }
+    }
+    const gradeIds = Object.keys(gradeMap).map(Number).sort((a,b)=>a-b);
+    if(!gradeIds.length) continue;
+
+    const gradesSections = gradeIds.map(g => {
+      const gMeta = GRADE_META[g] || {label: g===0?'Foundation':`Grade ${g}`, age:''};
+      const colour = g===0 ? '#8B6B8B' : GRADE_COLOURS[(g-1) % GRADE_COLOURS.length];
+      const topicsHtml = gradeMap[g].map(tp => `
+        <div class="mft-topic">
+          <div class="mft-topic-name">${tp.t}</div>
+          <div class="mft-lesson">${tp.l}</div>
+          ${tp.c.length ? `<ul class="mft-concepts">${tp.c.map(c=>`<li>${c}</li>`).join('')}</ul>` : ''}
+        </div>
+      `).join('');
+      return `<div class="mft-grade-section">
+        <div class="mft-grade-lbl" style="background:${colour}">${gMeta.label}${gMeta.age ? ' · '+gMeta.age : ''}</div>
+        ${topicsHtml}
+      </div>`;
+    }).join('');
+
+    html += `<div class="mft-block">
+      <div class="mft-head" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.mft-toggle').textContent=this.nextElementSibling.classList.contains('open')?'▾':'▸'">
+        <span class="mft-icon">${subj.icon}</span>
+        <span class="mft-name">${subj.name}</span>
+        <span class="mft-toggle">▸</span>
+      </div>
+      <div class="mft-body">${gradesSections}</div>
+    </div>`;
+  }
+  container.innerHTML = html || '<div class="empty">No curriculum data.</div>';
 }
 
 // ─── PLAN VIEW SWITCHER ───
@@ -6263,10 +6713,12 @@ function renderCurriculumTracker(){
           const k = `${sid}_${g}_${i}`;
           const done = getMasteryKey(currentStudentId, k);
           const flagged = getFlagKey(currentStudentId, k);
+          const flagReason = getFlagReason(currentStudentId, k);
           return `<div class="ct-item" onclick="ctToggleMastery('${k}',this)">
             <div class="ct-cb${done?' done':''}">${done?'✓':''}</div>
             <span class="ct-lbl${done?' done':''}">${item}</span>
-            <button class="ct-flag-btn${flagged?' flagged':''}" data-fkey="${k}" title="${flagged?'Remove flag':'Flag as needs attention'}" onclick="event.stopPropagation();toggleFlag('${k}')">🚩</button>
+            ${flagReason ? `<span class="ct-reason-chip" data-rkey="${k}" title="${flagReason.replace(/"/g,'&quot;')}" onclick="event.stopPropagation();openFlagReasonModal('${k}','${item.replace(/'/g,"\'").replace(/"/g,'&quot;')}',true)">${flagReason.length>28?flagReason.slice(0,28)+'…':flagReason}</span>` : ''}
+            <button class="ct-flag-btn${flagged?' flagged':''}" data-fkey="${k}" title="${flagged?'Click to remove flag':'Flag — add reason for concern'}" onclick="event.stopPropagation();toggleFlag('${k}','${item.replace(/'/g,"\'").replace(/"/g,'&quot;')}')">🚩</button>
           </div>`;
         }).join('')}
       </div>`;
@@ -6471,9 +6923,13 @@ function renderMasteryPlanner(){
           ${checks.map((item,i)=>{
             const k=`${subj.id}_${g}_${i}`;
             const done=getMasteryKey(currentStudentId,k);
-            return`<div class="mc-item" onclick="toggleMasteryPlanner('${k}',this)">
+            const flagged=getFlagKey(currentStudentId,k);
+            const reason=getFlagReason(currentStudentId,k);
+            return`<div class="mc-item" data-mkey="${k}">
               <div class="mc-box${done?' on':''}">${done?'✓':''}</div>
-              <span class="mc-lbl${done?' on':''}">${item}</span>
+              <span class="mc-lbl${done?' on':''}"><span>${item}</span>${reason?`<span class="mc-reason">🚩 ${reason}</span>`:''}
+              </span>
+              <button class="mc-flag-btn${flagged?' flagged':''}" data-fkey="${k}" data-label="${item.replace(/"/g,'&quot;')}" title="${flagged?'Remove flag':'Flag — add reason for concern'}">🚩</button>
             </div>`;
           }).join('')}
         </div>`}
@@ -6490,6 +6946,20 @@ function renderMasteryPlanner(){
       <div class="spb-body">${gradesSections}</div>
     </div>`;
   }).join('');
+
+  // Attach delegated listener AFTER innerHTML is set (setting innerHTML removes previous listeners)
+  container.onclick = function(e){
+    const flagBtn = e.target.closest('.mc-flag-btn');
+    if(flagBtn){
+      e.stopPropagation();
+      mcFlagClick(flagBtn);
+      return;
+    }
+    const mcItem = e.target.closest('.mc-item');
+    if(mcItem){
+      toggleMasteryPlanner(mcItem.dataset.mkey, mcItem);
+    }
+  };
 }
 
 function toggleMasteryPlanner(k,el){
@@ -7150,7 +7620,21 @@ function exportTodayPlan(){
   </head><body><h1>${student?.name||'Student'} — Today's Learning Plan</h1>
   <p>${new Date().toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>
   ${schedule}
-  </body></html>`;
+  <!-- ── FLAG REASON MODAL ── -->
+<div id="flag-reason-overlay" class="hidden">
+  <div id="flag-reason-modal">
+    <div class="frm-title">🚩 Red Flag — Add Reason</div>
+    <div class="frm-subtitle" id="frm-checkpoint-label"></div>
+    <label class="frm-label" for="flag-reason-text">Why are you flagging this?</label>
+    <textarea id="flag-reason-text" placeholder="e.g. Struggles with the concept of carrying in column addition. Gets confused when there are two carries in one sum. Needs more practice with visual manipulatives…" maxlength="400"></textarea>
+    <div class="frm-char-hint"><span id="frm-char-count">0</span>/400</div>
+    <div class="frm-btn-row">
+      <button class="btn btn-ghost" onclick="closeFlagReasonModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveFlagReason()" style="background:var(--terra)">🚩 Save Flag &amp; Reason</button>
+    </div>
+  </div>
+</div>
+</body></html>`;
   const blob=new Blob([html],{type:'text/html'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download=(student?.name||'student')+'_today_plan_'+new Date().toISOString().split('T')[0]+'.html';
@@ -9637,7 +10121,7 @@ if(document.readyState==='loading'){
 'use strict';
 
 // ── SNACKS DATA ──
-const SNACK_MENU = [
+const SNACK_MENU_DEFAULT = [
   { cat:'🥐 Baked & Fried', items:[
     {n:'Mandazi',e:'🥐'},{n:'Chapati',e:'🫓'},{n:'Samosa',e:'🥟'},
     {n:'Biscuits',e:'🍪'},{n:'Mini sausage rolls',e:'🌭'},
@@ -9651,9 +10135,7 @@ const SNACK_MENU = [
     {n:'Yoghurt',e:'🥛'},{n:'Popcorn',e:'🍿'},
   ]},
 ];
-
-// ── DRINKS DATA ──
-const DRINKS_MENU = [
+const DRINKS_MENU_DEFAULT = [
   { cat:'☕ Warm Drinks', items:[
     {n:'Chai tea',e:'☕'},{n:'Milo',e:'🍫'},{n:'Hot chocolate',e:'☕'},
     {n:'Warm milk',e:'🥛'},
@@ -9663,6 +10145,19 @@ const DRINKS_MENU = [
     {n:'Strawberry smoothie',e:'🍓'},{n:'Lemon water',e:'🍋'},{n:'Iced water',e:'💧'},
   ]},
 ];
+let SNACK_MENU = JSON.parse(JSON.stringify(SNACK_MENU_DEFAULT));
+let DRINKS_MENU = JSON.parse(JSON.stringify(DRINKS_MENU_DEFAULT));
+function loadMenuData(){
+  try{
+    const s = localStorage.getItem('lum_snack_menu'); if(s) SNACK_MENU = JSON.parse(s);
+  }catch(e){ SNACK_MENU = JSON.parse(JSON.stringify(SNACK_MENU_DEFAULT)); }
+  try{
+    const d = localStorage.getItem('lum_drink_menu'); if(d) DRINKS_MENU = JSON.parse(d);
+  }catch(e){ DRINKS_MENU = JSON.parse(JSON.stringify(DRINKS_MENU_DEFAULT)); }
+}
+function saveSnackMenu(){ try{ localStorage.setItem('lum_snack_menu', JSON.stringify(SNACK_MENU)); }catch(e){} }
+function saveDrinkMenu(){ try{ localStorage.setItem('lum_drink_menu', JSON.stringify(DRINKS_MENU)); }catch(e){} }
+loadMenuData();
 
 // ── ACTIVITIES DATA ──
 const ACTIVITY_MENU = [
@@ -9717,17 +10212,51 @@ loadCafeMenuState();
 function renderSnacksBoard(){
   const grid = document.getElementById('cafe-snack-menu-grid');
   if(!grid) return;
-  grid.innerHTML = SNACK_MENU.map(cat=>`
+  grid.innerHTML = SNACK_MENU.map((cat,ci)=>`
     <div class="cmb-section">
       <div class="cmb-section-title">${cat.cat}</div>
-      ${cat.items.map(it=>`
-        <div class="cmb-item ${cafeMenuSnacks.includes(it.n)?'selected':''}" onclick="cafeToggleSnack('${it.n}')">
+      ${cat.items.map((it,ii)=>`
+        <div class="cmb-item ${cafeMenuSnacks.includes(it.n)?'selected':''}" onclick="cafeToggleSnack('${it.n.replace(/'/g,"\\'")}')">
           <span class="cmb-item-emoji">${it.e}</span>
           <span class="cmb-item-name">${it.n}</span>
+          <button class="cmb-del-item dark" title="Remove from menu" onclick="event.stopPropagation();menuDelSnack(${ci},${ii})">✕</button>
         </div>`).join('')}
+      <div class="cmb-edit-row">
+        <input class="cmb-edit-input dark" id="snack-add-${ci}" placeholder="Add snack…" onkeydown="if(event.key==='Enter')menuAddSnack(${ci})">
+        <button class="cmb-add-btn" onclick="menuAddSnack(${ci})">+ Add</button>
+      </div>
     </div>`).join('');
+  // Add new category row
+  grid.innerHTML += `<div class="cmb-cat-add-row">
+    <input class="cmb-edit-input dark" id="snack-new-cat" placeholder="New category name e.g. 🍰 Sweet treats">
+    <button class="cmb-add-btn green" onclick="menuAddSnackCat()">+ New Category</button>
+  </div>`;
   renderSnacksTray();
 }
+window.menuDelSnack = function(ci, ii){
+  SNACK_MENU[ci].items.splice(ii,1);
+  if(!SNACK_MENU[ci].items.length){ SNACK_MENU.splice(ci,1); }
+  saveSnackMenu(); renderSnacksBoard();
+};
+window.menuAddSnack = function(ci){
+  const inp = document.getElementById('snack-add-'+ci);
+  if(!inp) return;
+  const val = inp.value.trim(); if(!val) return;
+  // Auto-detect emoji at start
+  const emojiMatch = val.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
+  const e = emojiMatch ? emojiMatch[0] : '🍽';
+  const n = emojiMatch ? val.slice(emojiMatch[0].length).trim() : val;
+  if(!n) return;
+  SNACK_MENU[ci].items.push({n, e});
+  saveSnackMenu(); renderSnacksBoard();
+};
+window.menuAddSnackCat = function(){
+  const inp = document.getElementById('snack-new-cat');
+  if(!inp) return;
+  const val = inp.value.trim(); if(!val) return;
+  SNACK_MENU.push({cat: val, items:[]});
+  saveSnackMenu(); renderSnacksBoard();
+};
 function renderSnacksTray(){
   const tray = document.getElementById('cafe-snacks-selected');
   if(!tray) return;
@@ -9744,17 +10273,50 @@ window.cafeToggleSnack = function(name){
 function renderDrinksBoard(){
   const grid = document.getElementById('cafe-drinks-menu-grid');
   if(!grid) return;
-  grid.innerHTML = DRINKS_MENU.map(cat=>`
+  grid.innerHTML = DRINKS_MENU.map((cat,ci)=>`
     <div class="cmb-section" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.15)">
       <div class="cmb-section-title" style="color:rgba(255,255,255,.55)">${cat.cat}</div>
-      ${cat.items.map(it=>`
-        <div class="cmb-item ${cafeMenuDrinks.includes(it.n)?'selected':''}" onclick="cafeToggleDrink('${it.n}')">
+      ${cat.items.map((it,ii)=>`
+        <div class="cmb-item ${cafeMenuDrinks.includes(it.n)?'selected':''}" onclick="cafeToggleDrink('${it.n.replace(/'/g,"\\'")}')">
           <span class="cmb-item-emoji">${it.e}</span>
           <span class="cmb-item-name">${it.n}</span>
+          <button class="cmb-del-item" title="Remove from menu" onclick="event.stopPropagation();menuDelDrink(${ci},${ii})">✕</button>
         </div>`).join('')}
+      <div class="cmb-edit-row">
+        <input class="cmb-edit-input" id="drink-add-${ci}" placeholder="Add drink…" onkeydown="if(event.key==='Enter')menuAddDrink(${ci})">
+        <button class="cmb-add-btn" onclick="menuAddDrink(${ci})">+ Add</button>
+      </div>
     </div>`).join('');
+  // Add new category row (white text style for dark bg)
+  grid.innerHTML += `<div class="cmb-cat-add-row" style="padding:.5rem 0">
+    <input class="cmb-edit-input" id="drink-new-cat" placeholder="New category e.g. 🧃 Juice bar">
+    <button class="cmb-add-btn green" onclick="menuAddDrinkCat()">+ New Category</button>
+  </div>`;
   renderDrinksTray();
 }
+window.menuDelDrink = function(ci,ii){
+  DRINKS_MENU[ci].items.splice(ii,1);
+  if(!DRINKS_MENU[ci].items.length){ DRINKS_MENU.splice(ci,1); }
+  saveDrinkMenu(); renderDrinksBoard();
+};
+window.menuAddDrink = function(ci){
+  const inp = document.getElementById('drink-add-'+ci);
+  if(!inp) return;
+  const val = inp.value.trim(); if(!val) return;
+  const emojiMatch = val.match(/^(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u);
+  const e = emojiMatch ? emojiMatch[0] : '🥤';
+  const n = emojiMatch ? val.slice(emojiMatch[0].length).trim() : val;
+  if(!n) return;
+  DRINKS_MENU[ci].items.push({n, e});
+  saveDrinkMenu(); renderDrinksBoard();
+};
+window.menuAddDrinkCat = function(){
+  const inp = document.getElementById('drink-new-cat');
+  if(!inp) return;
+  const val = inp.value.trim(); if(!val) return;
+  DRINKS_MENU.push({cat: val, items:[]});
+  saveDrinkMenu(); renderDrinksBoard();
+};
 function renderDrinksTray(){
   const tray = document.getElementById('cafe-drinks-selected');
   if(!tray) return;
