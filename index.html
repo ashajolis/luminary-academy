@@ -795,6 +795,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--bark);
 .psp-stat-l{font-size:.6rem;color:var(--bark-lt);text-transform:uppercase;letter-spacing:.06em}
 .psp-go-btn{display:block;width:100%;text-align:center;padding:.55rem;background:var(--terra);color:#fff;border:none;border-radius:var(--r-sm);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:500;margin-top:.8rem;transition:background .15s}
 .psp-go-btn:hover{background:#a8521e}
+.psp-cafe-live{border-radius:var(--r-sm);padding:.7rem .85rem;margin-bottom:.9rem;font-size:.78rem;display:flex;align-items:center;gap:10px}
+.psp-cafe-live.closed{background:var(--cream);color:var(--bark-lt);border:1px dashed var(--border)}
+.psp-cafe-live.open{background:var(--forest);color:#fff}
+.psp-cafe-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.psp-cafe-live.closed .psp-cafe-dot{background:var(--bark-lt)}
+.psp-cafe-live.open .psp-cafe-dot{background:#7CF29C;box-shadow:0 0 0 3px rgba(124,242,156,.3);animation:cafePulse 1.8s ease infinite}
+.psp-cafe-clock{font-family:'Fraunces',serif;font-weight:600;margin-left:auto;font-size:.95rem}
 
 /* ─── SUBJECT CURRICULA CARDS (Music, Art, PE, etc.) ─── */
 .new-subj-block{background:var(--warm);border:1px solid var(--border);border-radius:var(--r);margin-bottom:1rem;overflow:hidden}
@@ -1493,6 +1500,15 @@ body.cafe-theme-jungle #cafe-live-panel .cafe-timer-card{background:linear-gradi
         <div class="parent-hero-sub">All your children at a glance — progress, subjects, and today's status</div>
       </div>
       <button class="btn btn-ghost" style="color:#fff;border-color:rgba(255,255,255,.3)" onclick="closeParentOverview()">← Back to Home</button>
+    </div>
+  </div>
+  <div style="max-width:1400px;margin:0 auto;padding:1.2rem 1.5rem 0">
+    <div style="background:var(--bark);color:var(--cream);border-radius:var(--r);padding:1rem 1.3rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-family:'Fraunces',serif;font-size:1.05rem">☕ Live Study Café Monitor</div>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.65);margin-top:2px">Open each daughter in her own tab — each one runs its own independent timer, and you'll see both live right here.</div>
+      </div>
+      <button class="btn btn-primary" onclick="openAllCafeTabs()">🪟 Open Every Child's Tab at Once</button>
     </div>
   </div>
   <div class="parent-student-panels" id="parent-panels"></div>
@@ -2856,6 +2872,10 @@ body.cafe-theme-jungle #cafe-live-panel .cafe-timer-card{background:linear-gradi
     <div class="cafe-section">
       <div class="cafe-section-title">🗓 Build Your Session</div>
       <div class="cafe-section-sub">Blocks are 15–20 min each. Add a snack break and you're done in under 2 hours. Drag to reorder.</div>
+      <div style="background:var(--gold-pale);border-radius:var(--r-sm);padding:.7rem .9rem;margin-bottom:.8rem;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div style="font-size:.75rem;color:var(--bark-mid);line-height:1.5"><strong>🌱 New to the café?</strong> Load a gentle starter rhythm sized to this child's age — two short sessions a day instead of one long one, with a life-skill block woven in.</div>
+        <button class="cafe-add-btn" style="border-style:solid;border-color:var(--gold);color:var(--bark);background:#fff" onclick="cafeLoadSuggestedRoutine()">🌱 Load Suggested Routine</button>
+      </div>
       <div class="cafe-block-list" id="cafe-block-list"></div>
       <div class="cafe-add-blocks">
         <button class="cafe-add-btn" onclick="cafeAddBlock('maths')">+ 📐 Maths</button>
@@ -2866,6 +2886,8 @@ body.cafe-theme-jungle #cafe-live-panel .cafe-timer-card{background:linear-gradi
         <button class="cafe-add-btn" onclick="cafeAddBlock('break')">+ ☕ Snack Break</button>
         <button class="cafe-add-btn" onclick="cafeAddBlock('movement')">+ 🏃 Movement</button>
         <button class="cafe-add-btn" onclick="cafeAddBlock('project')">+ 🔭 Project</button>
+        <button class="cafe-add-btn" onclick="cafeAddBlock('nature')">+ 🌿 Nature Study</button>
+        <button class="cafe-add-btn" onclick="cafeAddBlock('chores')">+ 🧹 Life Skill / Chore</button>
         <button class="cafe-add-btn" onclick="cafeAddBlock('kiswahili')">+ 🇰🇪 Kiswahili</button>
         <button class="cafe-add-btn" onclick="cafeAddBlock('music')">+ 🎵 Music</button>
         <button class="cafe-add-btn" onclick="cafeAddBlock('custom')">+ ✏️ Custom</button>
@@ -4184,6 +4206,8 @@ function loginAsStudent(id){
   renderFoundation();
   buildToc();
   render();
+  if(typeof window.cafeOnStudentSwitch==='function') window.cafeOnStudentSwitch();
+  try{ const u=new URL(location.href); u.searchParams.set('student', id); history.replaceState(null,'',u.toString()); }catch(e){}
 }
 
 function showAddStudent(){
@@ -7694,11 +7718,13 @@ function showParentOverview(){
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('parent-overview-screen').style.display='block';
   renderParentOverview();
+  startCafeMonitor();
 }
 function closeParentOverview(){
   document.getElementById('parent-overview-screen').style.display='none';
   document.getElementById('login-screen').classList.remove('hidden');
   renderLoginScreen();
+  stopCafeMonitor();
 }
 function renderParentOverview(){
   const panels=document.getElementById('parent-panels');
@@ -7757,6 +7783,7 @@ function renderParentOverview(){
       </div>
     </div>
     <div class="psp-body">
+      <div class="psp-cafe-live" id="psp-cafe-${s.id}"></div>
       ${subjectBars}
       <div class="psp-stats-row">
         <div class="psp-stat"><div class="psp-stat-n">${starsCount}</div><div class="psp-stat-l">Stars</div></div>
@@ -7764,13 +7791,97 @@ function renderParentOverview(){
         <div class="psp-stat"><div class="psp-stat-n">${goalsAchieved}</div><div class="psp-stat-l">Goals Done</div></div>
         <div class="psp-stat"><div class="psp-stat-n">${overallPct}%</div><div class="psp-stat-l">Progress</div></div>
       </div>
-      <button class="psp-go-btn" onclick="closeParentOverview();loginAsStudent('${s.id}')">Open ${s.name}'s Dashboard →</button>
+      <div style="display:flex;gap:6px;margin-top:.8rem">
+        <button class="psp-go-btn" style="margin-top:0;flex:1" onclick="closeParentOverview();loginAsStudent('${s.id}')">Open Dashboard →</button>
+        <button class="psp-go-btn" style="margin-top:0;flex:1;background:var(--forest)" onclick="openCafeTab('${s.id}')">🪟 Open in New Tab</button>
+      </div>
     </div>`;
     panels.appendChild(panel);
   });
+  refreshCafeLiveStatuses();
   // Week focus
   const focuses=['📐 Maths — daily, morning first','📖 English — daily, second session','🔬 Science — Mon, Wed, Fri','📜 History — Tue, Thu rotating','🌍 Geography — Tue, Thu rotating','🎵 Music — 30 min daily','🎨 Art — 2× per week','⚽ PE — daily 20 min minimum','🇰🇪 Kiswahili — daily 20 min','⚖️ Character — woven through all lessons'];
   document.getElementById('parent-week-focus').innerHTML=focuses.map(f=>`<div style="padding:.3rem .8rem;background:var(--cream);border:1px solid var(--border);border-radius:20px">${f}</div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LIVE STUDY CAFÉ MONITOR (Parent Overview)
+//  Each child's Study Café state lives under its own localStorage key
+//  ('luminary_cafe_v3__<studentId>'), written by whichever browser tab that
+//  child is logged in on. Because the key is per-student, two daughters can
+//  each be open in their own tab — each running its own countdown — with no
+//  risk of one overwriting the other. This section just reads those keys to
+//  show a parent a live combined view, without touching either child's tab.
+// ═══════════════════════════════════════════════════════════
+function cafeKeyForStudent(sid){ return 'luminary_cafe_v3__' + (sid||'guest'); }
+function readCafeStateFor(sid){
+  try{
+    const raw = localStorage.getItem(cafeKeyForStudent(sid));
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+}
+function cafeFmtTimeShort(secs){
+  secs = Math.max(0, secs|0);
+  const m = Math.floor(secs/60), s = secs%60;
+  return m+':'+String(s).padStart(2,'0');
+}
+function renderCafeLiveCard(sid){
+  const el = document.getElementById('psp-cafe-'+sid);
+  if(!el) return;
+  const st = readCafeStateFor(sid);
+  if(!st || !st.isOpen){
+    el.className = 'psp-cafe-live closed';
+    el.innerHTML = `<div class="psp-cafe-dot"></div><div>☕ Study Café is closed right now</div>`;
+    return;
+  }
+  const idx = st.curIdx || 0;
+  const blocks = st.blocks || [];
+  const b = blocks[idx];
+  el.className = 'psp-cafe-live open';
+  if(!b){
+    el.innerHTML = `<div class="psp-cafe-dot"></div><div>🎉 Session complete — all blocks done!</div>`;
+    return;
+  }
+  // Estimate current remaining seconds, ticking forward locally between the
+  // periodic writes the timer tab makes, so the countdown looks live here too.
+  let remaining = st.tmrSecs != null ? st.tmrSecs : (b.dur*60);
+  if(st.tmrRun && st.lastUpdated){
+    const elapsedSinceWrite = Math.floor((Date.now() - st.lastUpdated)/1000);
+    remaining = Math.max(0, remaining - elapsedSinceWrite);
+  }
+  const statusWord = st.tmrRun ? 'Studying now' : 'Paused';
+  el.innerHTML = `<div class="psp-cafe-dot"></div><div>${b.emoji||'📚'} ${b.name||'Session'} · Block ${idx+1}/${blocks.length} · ${statusWord}</div><div class="psp-cafe-clock">${cafeFmtTimeShort(remaining)}</div>`;
+}
+function refreshCafeLiveStatuses(){
+  students.forEach(s=>renderCafeLiveCard(s.id));
+}
+let _cafeMonitorIv = null;
+function startCafeMonitor(){
+  stopCafeMonitor();
+  _cafeMonitorIv = setInterval(refreshCafeLiveStatuses, 1000);
+}
+function stopCafeMonitor(){
+  if(_cafeMonitorIv){ clearInterval(_cafeMonitorIv); _cafeMonitorIv=null; }
+}
+// Pick up changes the instant another tab writes them, not just on the 1s poll
+window.addEventListener('storage', (e)=>{
+  if(e.key && e.key.indexOf('luminary_cafe_v3__')===0){
+    if(document.getElementById('parent-overview-screen') && document.getElementById('parent-overview-screen').style.display!=='none'){
+      refreshCafeLiveStatuses();
+    }
+  }
+});
+function openCafeTab(sid){
+  const url = location.pathname + '?student=' + encodeURIComponent(sid) + '&tab=cafe';
+  window.open(url, '_blank');
+}
+function openAllCafeTabs(){
+  if(!students.length){ alert('Add students first.'); return; }
+  students.forEach((s,i)=>{
+    // small stagger so pop-up blockers are less likely to swallow the 2nd+ tab
+    setTimeout(()=>openCafeTab(s.id), i*250);
+  });
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -8349,7 +8460,22 @@ window._luminaryBoot = function() {
   loadWkData();
   restoreControls();
   renderLoginScreen();
-  if(students.length===1){ loginAsStudent(students[0].id); }
+  // If this tab was opened with ?student=<id> (e.g. from the Family Dashboard's
+  // "open in new tab" buttons), log straight into that child — this is what
+  // lets a parent open one tab per daughter, each running its own café/timer.
+  let deepLinkedStudent = null;
+  try{
+    const p = new URLSearchParams(location.search).get('student');
+    if(p && students.some(s=>s.id===p)) deepLinkedStudent = p;
+  }catch(e){}
+  if(deepLinkedStudent){
+    loginAsStudent(deepLinkedStudent);
+    try{
+      const t = new URLSearchParams(location.search).get('tab');
+      if(t) setTimeout(()=>{ try{ switchTab(t); }catch(e){} }, 50);
+    }catch(e){}
+  }
+  else if(students.length===1){ loginAsStudent(students[0].id); }
 };
 // Boot right away without waiting for Firebase
 window._luminaryBoot();
@@ -9254,7 +9380,9 @@ window.fbGuestMode = function() {
 // ═══════════════════════════════════════════════════════════
 (function(){
 
-const CAFE_KEY = 'luminary_cafe_v3';
+const CAFE_KEY_BASE = 'luminary_cafe_v3';
+function CAFE_KEY_FOR(sid){ return CAFE_KEY_BASE + '__' + (sid || 'guest'); }
+function CAFE_KEY_CUR(){ return CAFE_KEY_FOR(typeof currentStudentId!=='undefined' ? currentStudentId : null); }
 
 // ── constants ──
 const CAFE_THEME_META = {
@@ -9290,6 +9418,8 @@ const SUBJECT_STYLE = {
   kiswahili: {emoji:'🇰🇪', color:'var(--kiswahili)'},
   music:     {emoji:'🎵', color:'var(--music)'},
   custom:    {emoji:'✏️', color:'var(--bark-mid)'},
+  nature:    {emoji:'🌿', color:'var(--forest)'},
+  chores:    {emoji:'🧹', color:'var(--amber)'},
 };
 
 const BLOCK_DEFAULTS = {
@@ -9304,6 +9434,8 @@ const BLOCK_DEFAULTS = {
   kiswahili: {name:'Kiswahili',    dur:20},
   music:     {name:'Music',        dur:20},
   custom:    {name:'Custom Block', dur:20},
+  nature:    {name:'Nature Study', dur:15},
+  chores:    {name:'Life Skill / Chore', dur:15},
 };
 
 const CAFE_SNACKS = [
@@ -9372,21 +9504,63 @@ let cafeHistVis= false;
 let cafeDragSrc= null;
 
 // ── persist ──
+// Each student gets their OWN café storage key, so two daughters can each be
+// logged in — in two separate browser tabs — with completely independent
+// café setups, open/closed status, and running timers that never overwrite
+// one another.
 function loadCafeData(){
+  cafeData = {isOpen:false,theme:'forest',music:'lofi',blocks:[],history:[],xp:0,streak:0,lastDate:'',achievements:[],snackUsed:[],challengesDone:0,journalCount:0,curIdx:0,tmrSecs:0,tmrRun:false,lastUpdated:0};
   try{
-    const r = localStorage.getItem(CAFE_KEY);
+    const r = localStorage.getItem(CAFE_KEY_CUR());
     if(r) Object.assign(cafeData, JSON.parse(r));
   }catch(e){}
-  cafeOpen   = cafeData.isOpen || false;
-  cafeBlocks = (cafeData.blocks && cafeData.blocks.length)
+  cafeOpen    = cafeData.isOpen || false;
+  cafeBlocks  = (cafeData.blocks && cafeData.blocks.length)
     ? cafeData.blocks.map(b=>({...b}))
     : getDefaultBlocks();
+  cafeCurIdx  = cafeData.curIdx || 0;
+  cafeTmrSecs = cafeData.tmrSecs || 0;
+  cafeTmrRun  = false; // never auto-resume a running interval on (re)load — parent/child presses Start
 }
 function saveCafeData(){
-  cafeData.isOpen = cafeOpen;
-  cafeData.blocks = cafeBlocks.map(b=>({...b}));
-  try{ localStorage.setItem(CAFE_KEY, JSON.stringify(cafeData)); }catch(e){}
+  cafeData.isOpen      = cafeOpen;
+  cafeData.blocks      = cafeBlocks.map(b=>({...b}));
+  cafeData.curIdx      = cafeCurIdx;
+  cafeData.tmrSecs     = cafeTmrSecs;
+  cafeData.tmrRun      = cafeTmrRun;
+  cafeData.studentId   = typeof currentStudentId!=='undefined' ? currentStudentId : null;
+  cafeData.studentName = (function(){ try{ const s=students.find(x=>x.id===cafeData.studentId); return s?s.name:''; }catch(e){ return ''; } })();
+  cafeData.lastUpdated = Date.now();
+  try{ localStorage.setItem(CAFE_KEY_CUR(), JSON.stringify(cafeData)); }catch(e){}
 }
+
+// ── switch café state when the logged-in student changes (e.g. loginAsStudent) ──
+window.cafeOnStudentSwitch = function(){
+  // stop any interval left running for the previous student in THIS tab
+  cafeStopTimer();
+  if(cafeBrkIv){ clearInterval(cafeBrkIv); cafeBrkIv=null; }
+  loadCafeData();
+  updateCafeStatusBar();
+  renderCafeBlocks();
+  body_applyTheme();
+  if(cafeOpen){
+    showLivePanel();
+    updateTimerCard();
+    // restore progress display without auto-starting the clock
+    const clk=document.getElementById('ctc-clock');
+    if(clk && cafeBlocks[cafeCurIdx]){
+      cafeTotSecs = cafeBlocks[cafeCurIdx].dur*60;
+      if(!cafeTmrSecs) cafeTmrSecs = cafeTotSecs;
+      clk.textContent = cafeFmtTime(cafeTmrSecs);
+      const ph=document.getElementById('ctc-phase'); if(ph) ph.textContent='PAUSED';
+      const btn=document.getElementById('ctc-main-btn'); if(btn) btn.textContent='▶ Continue';
+    }
+    renderQueue();
+  } else {
+    hideLivePanel();
+  }
+  if(typeof renderCafeWeekPlanner==='function') renderCafeWeekPlanner();
+};
 function getDefaultBlocks(){
   return [
     makeBlock('maths'),
@@ -9661,6 +9835,42 @@ window.cafeRemoveBlock = function(idx){
   saveCafeData();
 };
 
+// ── SUGGESTED STARTER ROUTINE ──
+// Two short, varied sessions instead of one long "school day": short blocks
+// hold attention better, and weaving in a real life-skill/chore block builds
+// responsibility using the exact same routine that teaches maths and reading.
+window.cafeLoadSuggestedRoutine = function(){
+  const s = typeof currentStudentId!=='undefined' ? students.find(x=>x.id===currentStudentId) : null;
+  const age = s ? s.age : 8;
+  let plan;
+  if(age <= 7){
+    // Younger child: shorter attention span, more movement/play woven through
+    plan = [
+      {type:'maths',    dur:15},
+      {type:'break',    dur:10},
+      {type:'english',  dur:15},
+      {type:'movement', dur:10},
+      {type:'reading',  dur:15},
+      {type:'chores',   dur:15},
+    ];
+  } else {
+    // Older child: slightly longer focus blocks, room for a real project
+    plan = [
+      {type:'maths',    dur:20},
+      {type:'english',  dur:20},
+      {type:'break',    dur:10},
+      {type:'science',  dur:20},
+      {type:'nature',   dur:20},
+      {type:'chores',   dur:15},
+    ];
+  }
+  if(cafeBlocks.length && !confirm('This will replace the current session blocks with the suggested starter routine. Continue?')) return;
+  cafeBlocks = plan.map(p=>{ const b=makeBlock(p.type); b.dur=p.dur; return b; });
+  renderCafeBlocks();
+  saveCafeData();
+  if(typeof showCelebration==='function') showCelebration('🌱','Routine Loaded!','A gentle starter rhythm is ready — you can still drag, edit, or add to it anytime.');
+};
+
 function renderCafeBlocks(){
   const el = document.getElementById('cafe-block-list');
   if(!el) return;
@@ -9818,6 +10028,7 @@ function cafeStartTimer(){
   if(card) card.classList.add('running');
   document.getElementById('ctc-phase').textContent   = 'STUDYING…';
   document.getElementById('ctc-main-btn').textContent= '⏸ Pause';
+  saveCafeData();
   cafeTmrIv = setInterval(()=>{
     cafeTmrSecs--;
     const clk = document.getElementById('ctc-clock');
@@ -9827,6 +10038,7 @@ function cafeStartTimer(){
     if(clk){ clk.textContent = cafeFmtTime(cafeTmrSecs); if(cafeTmrSecs<=60) clk.classList.add('urgent'); else clk.classList.remove('urgent'); }
     if(bar) bar.style.width = Math.min(100,Math.round((elapsed/cafeTotSecs)*100))+'%';
     if(ela) ela.textContent = cafeFmtTime(elapsed)+' elapsed';
+    if(cafeTmrSecs % 2 === 0) saveCafeData(); // periodic write so a parent-dashboard tab can show a near-live countdown
     if(cafeTmrSecs <= 0){ cafeBlockComplete(); }
   }, 1000);
 }
@@ -9835,6 +10047,7 @@ function cafePauseTimer(){
   clearInterval(cafeTmrIv);
   document.getElementById('ctc-phase').textContent   = 'PAUSED';
   document.getElementById('ctc-main-btn').textContent= '▶ Continue';
+  saveCafeData();
 }
 function cafeStopTimer(){
   cafeTmrRun = false;
@@ -11817,6 +12030,491 @@ if(typeof _origDcpOpen==='function'){
 
 // ── custom snacks/activities already rendered by renderCustomSnacksList/renderCustomActivitiesList ──
 // switchTab now handled by _switchTabCore directly
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PATCH: Explorer Quest — XP, Levels, Auto-Badges & Knowledge Bursts
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+'use strict';
+
+/* ---------- Style injection ---------- */
+const gqStyle = document.createElement('style');
+gqStyle.textContent = `
+.gq-levelbar-card{background:linear-gradient(135deg,var(--forest),#20361f);color:var(--cream);border-radius:var(--r);padding:.85rem 1.1rem;margin-bottom:1.2rem;display:flex;align-items:center;gap:12px}
+.gq-level-emoji{font-size:1.9rem;flex-shrink:0;width:46px;height:46px;background:rgba(255,255,255,.12);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.gq-level-info{flex:1;min-width:0}
+.gq-level-name{font-family:'Fraunces',serif;font-size:.95rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.gq-level-xp{font-size:.66rem;color:rgba(255,255,255,.65);margin-top:1px}
+.gq-xp-track{height:7px;background:rgba(255,255,255,.15);border-radius:4px;overflow:hidden;margin-top:.4rem}
+.gq-xp-fill{height:100%;background:var(--gold);border-radius:4px;transition:width .5s ease}
+.gq-burst-btn{background:linear-gradient(135deg,var(--plum),#3d2649)!important;color:#fff!important;border:none!important}
+.gq-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2100;display:flex;align-items:center;justify-content:center;padding:1rem}
+.gq-modal-overlay.hidden{display:none}
+.gq-modal{background:var(--warm);border-radius:16px;padding:1.4rem;width:100%;max-width:440px;max-height:88vh;overflow-y:auto;position:relative}
+.gq-modal-close{position:absolute;top:.8rem;right:.9rem;background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--bark-lt)}
+.gq-modal-title{font-family:'Fraunces',serif;font-size:1.05rem;margin-bottom:.2rem;padding-right:1.5rem}
+.gq-modal-sub{font-size:.72rem;color:var(--bark-lt);margin-bottom:1rem}
+.gq-block{margin-bottom:.9rem}
+.gq-block-lbl{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--terra);margin-bottom:.3rem}
+.gq-block-txt{font-size:.87rem;line-height:1.55}
+.gq-hook{background:var(--gold-pale);border-radius:var(--r-sm);padding:.7rem .9rem;font-family:'Fraunces',serif;font-style:italic;font-size:.95rem;color:var(--bark);margin-bottom:.9rem}
+.gq-challenge{background:var(--plum-pale);border-radius:var(--r-sm);padding:.7rem .9rem}
+.gq-loading{text-align:center;padding:2rem 0;color:var(--bark-lt);font-size:.85rem}
+.gq-try-btn{width:100%;padding:.7rem;border-radius:20px;border:none;background:var(--forest-mid);color:#fff;font-family:'DM Sans',sans-serif;font-weight:600;font-size:.85rem;cursor:pointer;margin-top:.6rem}
+.gq-try-btn:disabled{opacity:.5;cursor:default}
+.gq-sw-level{font-size:.6rem;color:var(--gold);font-weight:600}
+.gq-badge-card{background:var(--plum-pale);border:1px solid rgba(92,58,107,.25);border-radius:var(--r);padding:.7rem 1rem;text-align:center;min-width:100px}
+`;
+document.head.appendChild(gqStyle);
+
+/* ---------- Levels ---------- */
+const GQ_LEVELS=[
+  {lvl:1,xp:0,name:'Seedling',emoji:'🌱'},
+  {lvl:2,xp:50,name:'Sprout',emoji:'🌿'},
+  {lvl:3,xp:120,name:'Sapling',emoji:'🌳'},
+  {lvl:4,xp:220,name:'Young Baobab',emoji:'🌴'},
+  {lvl:5,xp:350,name:'Acacia Explorer',emoji:'🦒'},
+  {lvl:6,xp:500,name:'Savannah Scholar',emoji:'🦓'},
+  {lvl:7,xp:700,name:'Rift Valley Ranger',emoji:'🏞️'},
+  {lvl:8,xp:950,name:'Mount Kenya Climber',emoji:'🏔️'},
+  {lvl:9,xp:1250,name:'Wisdom Keeper',emoji:'🦉'},
+  {lvl:10,xp:1600,name:'Luminary Legend',emoji:'⭐'},
+];
+function gqLevelForXp(xp){
+  let cur=GQ_LEVELS[0];
+  for(const l of GQ_LEVELS){ if(xp>=l.xp) cur=l; }
+  const idx=GQ_LEVELS.indexOf(cur);
+  const next=GQ_LEVELS[idx+1]||null;
+  const progress=next?Math.min(100,Math.round(((xp-cur.xp)/(next.xp-cur.xp))*100)):100;
+  return {...cur, next, progress, xp};
+}
+
+/* ---------- Storage ---------- */
+let gqXp={};
+try{ gqXp=JSON.parse(localStorage.getItem('lum_xp_v1')||'{}'); }catch(e){ gqXp={}; }
+function gqSave(){ try{ localStorage.setItem('lum_xp_v1',JSON.stringify(gqXp)); }catch(e){} }
+function gqEntry(sid){
+  if(!sid) return {xp:0,log:[],bonusDates:[]};
+  if(!gqXp[sid]) gqXp[sid]={xp:0,log:[],bonusDates:[]};
+  if(!gqXp[sid].bonusDates) gqXp[sid].bonusDates=[];
+  return gqXp[sid];
+}
+
+const GQ_BONUS_FLAVORS=[
+  {emoji:'🐘',text:'You spotted a hidden elephant on the trail!'},
+  {emoji:'🦋',text:'A rare butterfly landed on your notebook!'},
+  {emoji:'💎',text:'You found a shiny gem while exploring!'},
+  {emoji:'🥭',text:'You discovered a ripe mango on the way!'},
+  {emoji:'🌈',text:'A rainbow appeared just for you!'},
+  {emoji:'🐝',text:'A busy bee shared its honey secret!'},
+];
+
+function gqAwardXP(studentId, amount, reason, opts){
+  opts=opts||{};
+  if(!studentId||!amount) return;
+  const entry=gqEntry(studentId);
+  const before=gqLevelForXp(entry.xp);
+  entry.xp=Math.max(0,entry.xp+amount);
+  entry.log.push({date:Date.now(),amount,reason});
+  if(entry.log.length>200) entry.log=entry.log.slice(-200);
+  const after=gqLevelForXp(entry.xp);
+  gqSave();
+  if(!opts.silent && typeof showCelebration==='function'){
+    if(after.lvl>before.lvl){
+      showCelebration(after.emoji,'Level Up! '+after.name,`Amazing! +${amount} XP pushed you to Level ${after.lvl} — ${after.name}!`);
+    } else if(amount>0 && opts.announce!==false){
+      showCelebration('✨','+'+amount+' XP!',reason||'Great work — keep exploring!');
+    }
+  }
+  gqRefreshAll();
+  return after;
+}
+
+/* ---------- Hook: toggleDone -> award XP ---------- */
+if(typeof window.toggleDone==='function'){
+  const _gqOrigToggleDone=window.toggleDone;
+  window.toggleDone=function(sid, el){
+    const wasDone = (typeof completedSessions!=='undefined') && completedSessions.has(sid);
+    _gqOrigToggleDone(sid, el);
+    const isDone = (typeof completedSessions!=='undefined') && completedSessions.has(sid);
+    if(!currentStudentId) return;
+    if(!wasDone && isDone){
+      let xp=12;
+      let reason='Lesson completed';
+      const streak=(typeof calcStreak==='function')?calcStreak(currentStudentId):0;
+      if(streak>=7){ xp+=10; reason='Lesson completed · 7-day streak bonus!'; }
+      else if(streak>=3){ xp+=5; reason='Lesson completed · 3-day streak bonus!'; }
+      gqAwardXP(currentStudentId, xp, reason, {announce:false});
+      // Variable "surprise" bonus — ~25% chance, keeps it exciting
+      if(Math.random()<0.25){
+        const f=GQ_BONUS_FLAVORS[Math.floor(Math.random()*GQ_BONUS_FLAVORS.length)];
+        const bonus=5+Math.floor(Math.random()*8);
+        setTimeout(()=>{
+          const e=gqEntry(currentStudentId); e.xp+=bonus; e.log.push({date:Date.now(),amount:bonus,reason:'Surprise bonus'}); gqSave();
+          if(typeof showCelebration==='function') showCelebration(f.emoji,'Bonus Discovery!',f.text+` +${bonus} XP`);
+          gqRefreshAll();
+        },900);
+      } else if(typeof showCelebration!=='function'){
+        // no-op fallback
+      }
+    } else if(wasDone && !isDone){
+      gqAwardXP(currentStudentId, -12, '', {silent:true});
+    }
+  };
+}
+
+/* ---------- Today view: level bar ---------- */
+function gqRenderTodayBar(){
+  if(!currentStudentId) return;
+  const cards=document.getElementById('today-summary-cards');
+  if(!cards) return;
+  let bar=document.getElementById('gq-level-bar');
+  if(!bar){
+    bar=document.createElement('div');
+    bar.id='gq-level-bar';
+    bar.className='gq-levelbar-card';
+    cards.insertAdjacentElement('afterend', bar);
+  }
+  const info=gqLevelForXp(gqEntry(currentStudentId).xp);
+  bar.innerHTML=`
+    <div class="gq-level-emoji">${info.emoji}</div>
+    <div class="gq-level-info">
+      <div class="gq-level-name">Level ${info.lvl} · ${info.name}</div>
+      <div class="gq-level-xp">${info.xp} XP${info.next?` · ${info.next.xp-info.xp} XP to ${info.next.name} ${info.next.emoji}`:' · Max level reached!'}</div>
+      <div class="gq-xp-track"><div class="gq-xp-fill" style="width:${info.progress}%"></div></div>
+    </div>`;
+}
+
+/* ---------- Header: level chip next to student switcher ---------- */
+function gqRenderHeaderChip(){
+  if(!currentStudentId) return;
+  const grade=document.getElementById('sw-grade');
+  if(!grade) return;
+  let chip=document.getElementById('gq-sw-level');
+  if(!chip){
+    chip=document.createElement('div');
+    chip.id='gq-sw-level';
+    chip.className='gq-sw-level';
+    grade.insertAdjacentElement('afterend', chip);
+  }
+  const info=gqLevelForXp(gqEntry(currentStudentId).xp);
+  chip.textContent=`${info.emoji} Lv.${info.lvl} ${info.name}`;
+}
+
+/* ---------- Rewards tab: level card + extra badges ---------- */
+const GQ_EXTRA_BADGES=[
+  {emoji:'🔥',name:'On a Roll',desc:'3-day learning streak', req:(ctx)=>ctx.streak>=3},
+  {emoji:'🔥🔥',name:'Unstoppable',desc:'7-day learning streak', req:(ctx)=>ctx.streak>=7},
+  {emoji:'🌳',name:'Growing Strong',desc:'Reached Level 3', req:(ctx)=>ctx.level>=3},
+  {emoji:'🦒',name:'Acacia Explorer',desc:'Reached Level 5', req:(ctx)=>ctx.level>=5},
+  {emoji:'🦉',name:'Wisdom Keeper',desc:'Reached Level 9', req:(ctx)=>ctx.level>=9},
+  {emoji:'🎲',name:'Curious Mind',desc:'Tried 5 Knowledge Bursts', req:(ctx)=>ctx.bursts>=5},
+];
+function gqRenderRewardsExtra(){
+  if(!currentStudentId) return;
+  const starDisplay=document.getElementById('star-display');
+  if(!starDisplay) return;
+  const info=gqLevelForXp(gqEntry(currentStudentId).xp);
+  let card=document.getElementById('gq-rewards-level');
+  if(!card){
+    card=document.createElement('div');
+    card.id='gq-rewards-level';
+    card.className='gq-levelbar-card';
+    starDisplay.insertAdjacentElement('beforebegin', card);
+  }
+  card.innerHTML=`
+    <div class="gq-level-emoji">${info.emoji}</div>
+    <div class="gq-level-info">
+      <div class="gq-level-name">Level ${info.lvl} · ${info.name}</div>
+      <div class="gq-level-xp">${info.xp} total XP${info.next?` · ${info.next.xp-info.xp} XP to next level`:' · Max level!'}</div>
+      <div class="gq-xp-track"><div class="gq-xp-fill" style="width:${info.progress}%"></div></div>
+    </div>`;
+  // Extra badges appended after existing badge list
+  const badgesList=document.getElementById('badges-list');
+  if(badgesList){
+    const streak=(typeof calcStreak==='function')?calcStreak(currentStudentId):0;
+    let bursts=0;
+    try{ bursts=(JSON.parse(localStorage.getItem('lum_burst_done_v1')||'{}')[currentStudentId]||[]).length; }catch(e){}
+    const ctx={streak,level:info.lvl,bursts};
+    const earned=GQ_EXTRA_BADGES.filter(b=>b.req(ctx));
+    document.querySelectorAll('.gq-extra-badge').forEach(n=>n.remove());
+    earned.forEach(b=>{
+      const d=document.createElement('div');
+      d.className='gq-badge-card gq-extra-badge';
+      d.innerHTML=`<div style="font-size:1.8rem">${b.emoji}</div><div style="font-weight:600;font-size:.78rem;margin-top:4px">${b.name}</div><div style="font-size:.68rem;color:var(--bark-lt)">${b.desc}</div>`;
+      badgesList.appendChild(d);
+    });
+  }
+}
+
+function gqRefreshAll(){
+  gqRenderTodayBar();
+  gqRenderHeaderChip();
+  const rewardsView=document.getElementById('view-rewards');
+  if(rewardsView && rewardsView.classList.contains('active')) gqRenderRewardsExtra();
+}
+
+/* Hook renderToday */
+if(typeof window.renderToday==='function'){
+  const _gqOrigRenderToday=window.renderToday;
+  window.renderToday=function(...a){ _gqOrigRenderToday(...a); gqRenderTodayBar(); gqRenderHeaderChip(); };
+}
+/* Hook renderRewards */
+if(typeof window.renderRewards==='function'){
+  const _gqOrigRenderRewards=window.renderRewards;
+  window.renderRewards=function(...a){ _gqOrigRenderRewards(...a); gqRenderRewardsExtra(); };
+}
+/* Hook loginAsStudent for immediate header chip */
+if(typeof window.loginAsStudent==='function'){
+  const _gqOrigLogin=window.loginAsStudent;
+  window.loginAsStudent=function(...a){ _gqOrigLogin(...a); gqRenderHeaderChip(); gqRenderTodayBar(); };
+}
+
+/* ---------- Knowledge Burst ---------- */
+// Inject modal markup once
+document.addEventListener('DOMContentLoaded', function(){
+  if(document.getElementById('gq-burst-overlay')) return;
+  const wrap=document.createElement('div');
+  wrap.innerHTML=`
+  <div id="gq-burst-overlay" class="gq-modal-overlay hidden" onclick="if(event.target===this) gqCloseBurst()">
+    <div class="gq-modal">
+      <button class="gq-modal-close" onclick="gqCloseBurst()">✕</button>
+      <div class="gq-modal-title">🎲 Knowledge Burst</div>
+      <div class="gq-modal-sub" id="gq-burst-sub">A quick, exciting angle on today's topic</div>
+      <div id="gq-burst-body"><div class="gq-loading">Cooking up something curious…</div></div>
+    </div>
+  </div>`;
+  document.body.appendChild(wrap.firstElementChild);
+});
+
+let gqBurstCtx=null;
+window.gqCloseBurst=function(){
+  const ov=document.getElementById('gq-burst-overlay');
+  if(ov) ov.classList.add('hidden');
+};
+
+// Offline library of "burst" techniques — no AI, no network. Each technique is a
+// reusable pattern you apply to WHATEVER topic is on today's schedule. Rotates
+// randomly (without repeating the last one) so the method itself stays fresh.
+const GQ_BURST_TECHNIQUES=[
+  {name:"Guess Before I Tell", hook:"Before I say anything about {topic} — what do you think it means? Take a wild guess!", challenge:"Let them guess 2-3 times (wrong guesses are fine and fun). Only after they guess do you give the real, one-sentence answer.", realLife:"Ask: have you ever seen or used this around home? Let them find the connection themselves."},
+  {name:"Mystery Object", hook:"Go grab one object from the room that you think has something to do with {topic}. Bring it back!", challenge:"They explain why they picked it — right or wrong does not matter, the thinking-out-loud is the lesson.", realLife:"Ask them to find a second object outside that connects too."},
+  {name:"Race the Clock", hook:"I bet you cannot tell me 3 things about {topic} before I count to 20!", challenge:"Count out loud slowly while they blurt out anything they know or guess. Cheer every answer.", realLife:"Afterward, add one real fact they missed — just one, then stop."},
+  {name:"Story Hook", hook:"Once upon a time, someone needed to understand {topic} to solve a big problem — want to hear it?", challenge:"Make up a 30-second silly story on the spot connecting {topic} to an adventure. They finish the ending.", realLife:"Ask: could that really happen here in Chuka?"},
+  {name:"What If", hook:"What if {topic} did not exist at all — what would be different?", challenge:"Let them imagine out loud for a minute. No wrong answers. Then you add what would actually happen.", realLife:"Connect it to something that would change at home if it were true."},
+  {name:"Compare Two Things", hook:"Which is more like {topic}: a chicken or a bicycle? You pick, then explain why!", challenge:"Whatever they pick, ask why three times in a row, going deeper each time.", realLife:"Find a real object at home that is like the topic in some way."},
+  {name:"Body Movement", hook:"Can you show me {topic} using only your body and no words?", challenge:"They act it out for 30 seconds. You guess, then they teach you if you are wrong.", realLife:"Do the movement again outside where there is more space."},
+  {name:"Draw It Fast", hook:"You have 60 seconds to draw {topic} — ready, go!", challenge:"Time them with your phone or just count. When time is up, they explain their drawing.", realLife:"Compare it to something real they can point to nearby."},
+  {name:"Prediction Game", hook:"I am going to do something related to {topic} — guess what happens before I do it!", challenge:"Demonstrate something small and physical if possible (drop something, mix something, count something). Did their guess match?", realLife:"Ask where else this might happen in daily life."},
+  {name:"Would You Rather", hook:"Would you rather be really good at {topic} or really good at football — and why?", challenge:"Whatever they answer, ask them to defend it for 30 seconds like a lawyer.", realLife:"Ask if anyone they know is actually good at this."},
+  {name:"Spot the Silly Mistake", hook:"I am going to tell you something about {topic} — but one part is WRONG. Catch it!", challenge:"Say 2 true things and 1 deliberately silly wrong thing. They have to spot the wrong one.", realLife:"Ask them to make up a silly wrong statement for you to catch back."},
+  {name:"Teach the Toy", hook:"Grab a toy or the little one — you are now the teacher. Teach them about {topic} in one minute!", challenge:"They explain it out loud to a toy, sibling, or even a chicken. Explaining out loud cements it fast.", realLife:"Ask what question the student might ask back."},
+  {name:"Chain of Why", hook:"Here is one fact about {topic}. Now ask me why as many times as you can!", challenge:"State one simple fact, let them fire why questions rapid-style, answer briefly each time — stop after 3-4 whys.", realLife:"End on whichever why connects most to something they already know."},
+  {name:"Treasure Hunt", hook:"Somewhere in this house or yard is something connected to {topic} — go find it in 90 seconds!", challenge:"Set a rough timer (or just say go). Celebrate whatever they bring back, even if it is a stretch.", realLife:"Ask how many more things like it they can spot around them right now."},
+  {name:"Question Swap", hook:"Ask me a question about {topic} — anything you are curious about. I will try to answer honestly, even I do not know.", challenge:"Answer briefly. If you do not know, say so and figure it out together — that is a great lesson too.", realLife:"Ask them what made them curious about that question."},
+];
+let gqLastTechniqueIdx=-1;
+function gqPickTechnique(){
+  let idx;
+  do{ idx=Math.floor(Math.random()*GQ_BURST_TECHNIQUES.length); }while(idx===gqLastTechniqueIdx && GQ_BURST_TECHNIQUES.length>1);
+  gqLastTechniqueIdx=idx;
+  return GQ_BURST_TECHNIQUES[idx];
+}
+
+window.openKnowledgeBurst=function(subjectId, subject, topic, grade, sid){
+  gqBurstCtx={subjectId, subject, topic, grade, sid};
+  const ov=document.getElementById('gq-burst-overlay');
+  const sub=document.getElementById('gq-burst-sub');
+  const body=document.getElementById('gq-burst-body');
+  if(!ov||!body) return;
+  const t=topic||"today's topic";
+  sub.textContent=`${subject||''} · ${topic||"Today's lesson"}`;
+  const tech=gqPickTechnique();
+  const fill=(s)=>s.replace(/\{topic\}/g,t);
+  body.innerHTML=`
+    <div class="gq-block-lbl" style="color:var(--plum);margin-bottom:.5rem">🎴 Technique: ${tech.name}</div>
+    <div class="gq-hook">${fill(tech.hook)}</div>
+    <div class="gq-block gq-challenge"><div class="gq-block-lbl">🎯 Do This (2 min)</div><div class="gq-block-txt">${fill(tech.challenge)}</div></div>
+    <div class="gq-block"><div class="gq-block-lbl">🌍 Connect It</div><div class="gq-block-txt">${fill(tech.realLife)}</div></div>
+    <button class="gq-try-btn" id="gq-try-btn" onclick="gqCompleteBurst()">✅ We tried it!</button>
+    <button class="gq-try-btn" style="background:transparent;color:var(--bark-mid);border:1px solid var(--border);margin-top:6px" onclick="openKnowledgeBurst('${subjectId}','${(subject||'').replace(/'/g,"\\\\'")}','${(topic||'').replace(/'/g,"\\\\'")}',${grade||1},${sid?`'${sid}'`:'null'})">🔄 Try a different technique</button>
+  `;
+  ov.classList.remove('hidden');
+};
+
+window.gqCompleteBurst=function(){
+  if(!gqBurstCtx||!currentStudentId) return;
+  let store={};
+  try{ store=JSON.parse(localStorage.getItem('lum_burst_done_v1')||'{}'); }catch(e){}
+  if(!store[currentStudentId]) store[currentStudentId]=[];
+  const key=gqBurstCtx.sid||(gqBurstCtx.subjectId+'-'+gqBurstCtx.topic);
+  if(store[currentStudentId].includes(key)){
+    const btn=document.getElementById('gq-try-btn');
+    if(btn){ btn.disabled=true; btn.textContent='Already counted today ✓'; }
+    return;
+  }
+  store[currentStudentId].push(key);
+  try{ localStorage.setItem('lum_burst_done_v1',JSON.stringify(store)); }catch(e){}
+  gqAwardXP(currentStudentId, 8, '🎲 Knowledge Burst challenge completed!');
+  const btn=document.getElementById('gq-try-btn');
+  if(btn){ btn.disabled=true; btn.textContent='+8 XP earned! ✓'; }
+};
+
+/* ---------- Hook injectTodayLessonExtras to add the Burst button ---------- */
+if(typeof window.injectTodayLessonExtras==='function'){
+  const _gqOrigInject=window.injectTodayLessonExtras;
+  window.injectTodayLessonExtras=function(...a){
+    _gqOrigInject(...a);
+    document.querySelectorAll('.today-extra-actions').forEach(actDiv=>{
+      if(actDiv.querySelector('.gq-burst-inline-btn')) return;
+      const askBtn=actDiv.querySelector('.ask-ai-btn');
+      if(!askBtn) return;
+      const m=askBtn.getAttribute('onclick')?.match(/askAIAboutLesson\('([^']*)','([^']*)','([^']*)',(\d+)\)/);
+      const btn=document.createElement('button');
+      btn.className='ask-ai-btn gq-burst-btn gq-burst-inline-btn';
+      btn.textContent='🎲 Knowledge Burst';
+      if(m){
+        const subjId=m[1], subj=m[2], topic=m[3], grade=m[4];
+        btn.onclick=function(){ window.openKnowledgeBurst(subjId, subj, topic, parseInt(grade), null); };
+      } else {
+        btn.onclick=function(){ window.openKnowledgeBurst('', '', '', 1, null); };
+      }
+      askBtn.insertAdjacentElement('afterend', btn);
+    });
+  };
+}
+
+/* Initial render if a student is already logged in on load */
+setTimeout(gqRefreshAll, 400);
+
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PATCH: Quick Placement — set each daughter's real starting grade
+     per subject in one step, so My Plan reflects actual knowledge
+     instead of defaulting every subject to Grade 1.
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+'use strict';
+
+const PLC_SUBJECTS=[
+  {id:'maths', label:'Mathematics', icon:'∑'},
+  {id:'english', label:'English', icon:'📖'},
+  {id:'science', label:'Science', icon:'⚗'},
+  {id:'geography', label:'Geography', icon:'🌍'},
+  {id:'history', label:'History', icon:'🏛'},
+  {id:'finance', label:'Finance', icon:'💰'},
+  {id:'lifeskills', label:'Life Skills', icon:'🧭'},
+];
+
+const plcStyle=document.createElement('style');
+plcStyle.textContent=`
+.plc-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2100;display:flex;align-items:center;justify-content:center;padding:1rem}
+.plc-modal-overlay.hidden{display:none}
+.plc-modal{background:var(--warm);border-radius:16px;padding:1.4rem;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;position:relative}
+.plc-modal-close{position:absolute;top:.8rem;right:.9rem;background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--bark-lt)}
+.plc-modal-title{font-family:'Fraunces',serif;font-size:1.1rem;margin-bottom:.3rem;padding-right:1.5rem}
+.plc-modal-sub{font-size:.76rem;color:var(--bark-lt);margin-bottom:1.1rem;line-height:1.5}
+.plc-row{display:flex;align-items:center;gap:10px;padding:.5rem 0;border-bottom:1px solid var(--border)}
+.plc-row:last-of-type{border-bottom:none}
+.plc-row-icon{width:30px;flex-shrink:0;text-align:center;font-size:1.1rem}
+.plc-row-label{flex:1;font-size:.85rem;font-weight:500}
+.plc-row select{padding:.4rem .6rem;border-radius:8px;border:1px solid var(--border);background:var(--cream);font-family:'DM Sans',sans-serif;font-size:.8rem}
+.plc-open-btn{display:inline-flex;align-items:center;gap:6px;padding:.5rem 1rem;border-radius:20px;border:none;background:var(--forest);color:#fff;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;margin-bottom:1rem}
+.plc-note{background:var(--gold-pale);border-radius:var(--r-sm);padding:.6rem .8rem;font-size:.72rem;color:var(--bark-mid);margin-top:1rem;line-height:1.5}
+`;
+document.head.appendChild(plcStyle);
+
+function plcAgeGuess(age){
+  if(!age || age<=5) return 0;
+  return Math.max(1, Math.min(9, age-4));
+}
+
+function plcInjectModal(){
+  if(document.getElementById('plc-overlay')) return;
+  const wrap=document.createElement('div');
+  wrap.innerHTML=`
+  <div id="plc-overlay" class="plc-modal-overlay hidden" onclick="if(event.target===this) plcClose()">
+    <div class="plc-modal">
+      <button class="plc-modal-close" onclick="plcClose()">✕</button>
+      <div class="plc-modal-title">📍 Quick Placement</div>
+      <div class="plc-modal-sub" id="plc-sub">For each subject, pick the grade she should start working on right now. Everything below that grade gets marked as already mastered, so My Plan jumps straight to the right level.</div>
+      <div id="plc-rows"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:1rem" onclick="plcSave()">Save Placement</button>
+      <div class="plc-note">You can still fine-tune individual checkpoints anytime in the Mastery Planner tab — this just sets a fast starting point.</div>
+    </div>
+  </div>`;
+  document.body.appendChild(wrap.firstElementChild);
+}
+document.addEventListener('DOMContentLoaded', plcInjectModal);
+
+window.plcOpen=function(){
+  plcInjectModal();
+  if(!currentStudentId) return;
+  const student=students.find(s=>s.id===currentStudentId);
+  document.getElementById('plc-sub').textContent=`For each subject, pick the grade ${student?student.name:'she'} should start working on right now. Everything below that grade gets marked as already mastered.`;
+  const rows=document.getElementById('plc-rows');
+  const guess=plcAgeGuess(student?student.age:null);
+  rows.innerHTML=PLC_SUBJECTS.map(s=>{
+    const opts=GRADE_META.map(g=>`<option value="${g.id}" ${g.id===guess?'selected':''}>${g.label}</option>`).join('');
+    return `<div class="plc-row">
+      <div class="plc-row-icon">${s.icon}</div>
+      <div class="plc-row-label">${s.label}</div>
+      <select id="plc-sel-${s.id}">${opts}</select>
+    </div>`;
+  }).join('');
+  document.getElementById('plc-overlay').classList.remove('hidden');
+};
+window.plcClose=function(){
+  const ov=document.getElementById('plc-overlay');
+  if(ov) ov.classList.add('hidden');
+};
+
+window.plcSave=function(){
+  if(!currentStudentId) return;
+  PLC_SUBJECTS.forEach(s=>{
+    const sel=document.getElementById('plc-sel-'+s.id);
+    if(!sel) return;
+    const targetGrade=parseInt(sel.value);
+    const m=MASTERY[s.id];
+    if(!m) return;
+    Object.keys(m).map(Number).forEach(gradeId=>{
+      if(gradeId<targetGrade){
+        m[gradeId].forEach((_,i)=>{
+          setMasteryKey(currentStudentId, `${s.id}_${gradeId}_${i}`, true);
+        });
+      }
+    });
+  });
+  plcClose();
+  if(typeof showCelebration==='function') showCelebration('📍','Placement Saved!','My Plan now starts at the right level for each subject.');
+  if(typeof renderAIPlan==='function') renderAIPlan();
+  if(typeof renderMasteryPlanner==='function') renderMasteryPlanner();
+  if(typeof renderMasteryFullTopics==='function') renderMasteryFullTopics();
+};
+
+/* Inject the "Quick Placement" button into the My Plan tab header */
+function plcInjectButton(){
+  const blocks=document.getElementById('aiplan-blocks');
+  if(!blocks || document.getElementById('plc-open-btn')) return;
+  const btn=document.createElement('button');
+  btn.id='plc-open-btn';
+  btn.className='plc-open-btn';
+  btn.innerHTML='📍 Quick Placement — set starting grade';
+  btn.onclick=window.plcOpen;
+  blocks.insertAdjacentElement('beforebegin', btn);
+}
+if(typeof window.renderAIPlan==='function'){
+  const _plcOrigRenderAIPlan=window.renderAIPlan;
+  window.renderAIPlan=function(...a){ _plcOrigRenderAIPlan(...a); plcInjectButton(); };
+}
+setTimeout(plcInjectButton, 500);
+
 })();
 </script>
 
