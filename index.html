@@ -244,6 +244,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--bark);
 .day-pill.done-pill{opacity:.5}
 .day-pill.done-pill .dp-sub::after{content:" ✓";font-size:.65rem}
 .day-pill.custom-pill{background:var(--teal);color:#fff}
+.day-break{font-size:.62rem;color:var(--bark-lt);text-align:center;padding:2px 0 7px;font-style:italic}
+.sch-block.break-block{background:var(--gold-pale);border-style:dashed;opacity:.9}
+.sch-block.break-block .sch-head{cursor:default}
 .week-tip{background:var(--gold-pale);border:1px solid rgba(184,137,42,.2);border-radius:var(--r);padding:.85rem 1.1rem;margin-bottom:1.2rem;font-size:.81rem;display:flex;gap:9px}
 .pl-legend{display:flex;gap:12px;flex-wrap:wrap;padding:.7rem 0;border-bottom:1px solid var(--border);margin-bottom:1.1rem;font-size:.72rem;color:var(--bark-mid)}
 .pl-item{display:flex;align-items:center;gap:5px}
@@ -1993,7 +1996,7 @@ body.cafe-theme-jungle #cafe-live-panel .cafe-timer-card{background:linear-gradi
 
   <div style="background:var(--gold-pale);border:1px solid rgba(184,137,42,.2);border-radius:var(--r);padding:.85rem 1.1rem;margin-top:1.2rem;font-size:.81rem;display:flex;gap:9px">
     <div style="font-size:1.1rem;flex-shrink:0">💡</div>
-    <div><strong>How the week planner works:</strong> School runs 9:00–12:30 (4 sessions). Afternoons are free — see the activity ideas below. Click any lesson to view details and edit it.</div>
+    <div><strong>How the week planner works:</strong> School runs 9:00-12:30: six 30-minute lessons with a 15-minute break after every 2. Mon–Wed = core subjects (Maths, English, Science, History, Geography, ICT); Thu–Fri = Languages, Creative &amp; Physical and Life Skills. Afternoons are free — see the activity ideas below. Click any lesson to view details and edit it.</div>
   </div>
 
   <!-- ══ WEEK CAFÉ PLANNER ══ -->
@@ -4333,6 +4336,35 @@ function getEnglishTopic(g, studentId){
   return topics[idx % topics.length];
 }
 
+// ═══════════════════════════════════════════════════════════
+//  DAILY TIMETABLE
+//  Mon–Wed : Core & Foundation  (Maths, English, Science + 3 other core subjects)
+//  Thu–Fri : Languages · Creative & Physical · Life Skills
+//  Every lesson is 30 min max · a 15-min break follows every 2 lessons · school starts 09:00
+// ═══════════════════════════════════════════════════════════
+function _durMins(d){ const m=String(d||'').match(/\d+/); return m?parseInt(m[0],10):30; }
+function _clock(mins){ return String(Math.floor(mins/60)).padStart(2,'0')+':'+String(mins%60).padStart(2,'0'); }
+const BREAK_IDEAS=[
+  'Snack, water & a stretch -- screens off, step outside if you can',
+  'Move your body -- run, dance, skip or do star jumps',
+  'Free play, quiet reading or a little tidy-up -- recharge before the next lesson',
+  'Fresh air and a drink of water -- look at the sky, the trees, anything alive'
+];
+// Gives each lesson a start time (from 09:00), caps it at 30 min and inserts a 15-min break after every 2 lessons
+function layoutDay(lessons){
+  const out=[]; let t=9*60, n=0, b=0;
+  lessons.forEach((l,i)=>{
+    const dur=Math.min(_durMins(l.duration),30);
+    out.push(Object.assign({},l,{time:_clock(t),duration:dur+' min'}));
+    t+=dur; n++;
+    if(n%2===0 && i<lessons.length-1){
+      out.push({time:_clock(t),subject:'☕ Break',subjectId:'break',topic:BREAK_IDEAS[b%BREAK_IDEAS.length],priority:0,duration:'15 min',grade:0});
+      t+=15; b++;
+    }
+  });
+  return out;
+}
+
 // getDayPlan accepts subjectGrades map and optional studentId for progress tracking
 function getDayPlan(subjectGrades, dow, studentId){
   studentId = studentId || currentStudentId || null;
@@ -4345,31 +4377,60 @@ function getDayPlan(subjectGrades, dow, studentId){
   const geoG    = isMixed ? (subjectGrades.geography||1): subjectGrades;
   const financeG= isMixed ? (subjectGrades.finance || 1) : subjectGrades;
 
-  const d=dow===0||dow===6?0:dow-1;
+  const d=dow===0||dow===6?0:dow-1;   // 0=Mon … 4=Fri
+  const coreDay = d<=2;               // Mon–Wed
 
+  // Grade + curriculum-linked topic for subjects that are not in the six tracked grades above
+  const gOf=(id)=>{
+    if(isMixed && subjectGrades[id]!==undefined) return subjectGrades[id];
+    try{ return (studentId && MASTERY[id]) ? getStudentGradeForSubject(studentId,id) : mathsG; }catch(e){ return mathsG; }
+  };
+  const tOf=(id,fb)=>{
+    try{ const n=studentId?getNextTopicForSubject(studentId,id):null; return n ? (n.topic+(n.lesson?' -- '+n.lesson:'')) : fb; }
+    catch(e){ return fb; }
+  };
+
+  // ── Foundation stage (ages 3-5): short, playful lessons — still 6 per day with a break after every 2 ──
   if(mathsG===0 && englishG===0){
+    const F=(subject,subjectId,topic,priority,extra)=>Object.assign({subject,subjectId,topic,priority:priority||3,duration:'20 min',grade:0},extra||{});
     const fp=[
-      [{time:"09:00",subject:"Circle Time",subjectId:"foundation",topic:"Greetings, date, weather discussion",priority:1,duration:"15 min",grade:0},
-       {time:"09:20",subject:"Colours & Shapes",subjectId:"foundation",topic:"Colour of the day + shape sorting activity",priority:1,duration:"20 min",grade:0},
-       {time:"09:45",subject:"Numbers",subjectId:"foundation",topic:"Count objects 1–10, number recognition",priority:1,duration:"15 min",grade:0},
-       {time:"10:05",subject:"Phonics Song",subjectId:"foundation",topic:"Alphabet song + letter of the day",priority:1,duration:"15 min",grade:0},
-       {time:"10:25",subject:"Free Play",subjectId:"foundation",topic:"Physical play, sensory exploration",priority:0,duration:"30 min",grade:0}],
-      [{time:"09:00",subject:"Morning Song",subjectId:"foundation",topic:"Days of the week song",priority:1,duration:"10 min",grade:0},
-       {time:"09:15",subject:"Body Parts",subjectId:"foundation",topic:"Point & name body parts game",priority:1,duration:"20 min",grade:0},
-       {time:"09:40",subject:"Pre-Writing",subjectId:"foundation",topic:"Tracing lines and simple shapes",priority:1,duration:"20 min",grade:0},
-       {time:"10:05",subject:"Storytime",subjectId:"foundation",topic:"Read aloud picture book",priority:1,duration:"20 min",grade:0}],
-      [{time:"09:00",subject:"Counting Fun",subjectId:"foundation",topic:"Count to 20, more/fewer",priority:1,duration:"20 min",grade:0},
-       {time:"09:25",subject:"Concepts",subjectId:"foundation",topic:"Big/small, hot/cold, full/empty games",priority:1,duration:"20 min",grade:0},
-       {time:"09:50",subject:"Art & Creativity",subjectId:"foundation",topic:"Draw and colour freely; name colours used",priority:1,duration:"25 min",grade:0},
-       {time:"10:20",subject:"Animal World",subjectId:"foundation",topic:"Name animals, sounds, habitats",priority:1,duration:"20 min",grade:0}],
-      [{time:"09:00",subject:"Alphabet Practice",subjectId:"foundation",topic:"Letter sounds, matching letters to pictures",priority:1,duration:"20 min",grade:0},
-       {time:"09:25",subject:"Numbers 11–20",subjectId:"foundation",topic:"Teen numbers, counting on from 10",priority:1,duration:"20 min",grade:0},
-       {time:"10:15",subject:"Music & Movement",subjectId:"foundation",topic:"Songs, clapping rhythms, dancing",priority:1,duration:"20 min",grade:0}],
-      [{time:"09:00",subject:"Review Day",subjectId:"foundation",topic:"What did we learn this week?",priority:1,duration:"20 min",grade:0},
-       {time:"09:25",subject:"Shape Hunt",subjectId:"foundation",topic:"Find shapes around the house",priority:1,duration:"20 min",grade:0},
-       {time:"09:50",subject:"Colour Mixing",subjectId:"foundation",topic:"Paint: red+blue=purple, blue+yellow=green",priority:1,duration:"25 min",grade:0}]
+      // Monday
+      [F('🔢 Numbers','foundation','Count objects 1-10, number recognition',1,{ess:true}),
+       F('🔤 Letters & Sounds','foundation','Alphabet song + letter of the day',1,{ess:true}),
+       F('🌿 Nature & Science','foundation','Name animals, their sounds and where they live',2),
+       F('🎨 Colours & Shapes','foundation','Colour of the day + shape sorting activity',3),
+       F('🧍 Body & Senses','foundation','Point & name body parts game; the 5 senses',3),
+       F('✏️ Pre-Writing','foundation','Tracing lines and simple shapes',3)],
+      // Tuesday
+      [F('🔢 Counting Fun','foundation','Count to 20, more / fewer',1,{ess:true}),
+       F('🔤 Alphabet Practice','foundation','Letter sounds, matching letters to pictures',1,{ess:true}),
+       F('🌱 Plants & Growing','foundation','Parts of a plant; plant a bean seed and water it',2),
+       F('🧩 Concepts','foundation','Big/small, hot/cold, full/empty games',3),
+       F('🔷 Shape Hunt','foundation','Find shapes around the house',3),
+       F('✏️ Pre-Writing','foundation','Trace circles, squares and wavy lines',3)],
+      // Wednesday
+      [F('🔢 Numbers 11-20','foundation','Teen numbers, counting on from 10',1,{ess:true}),
+       F('📚 Rhymes & Storytime','foundation','Read aloud a picture book; learn a new rhyme',1,{ess:true}),
+       F('☀️ Weather & Seasons','foundation','Rainy and dry season; look outside and describe the weather',2),
+       F('🖌️ Colour Mixing','foundation','Paint: red+blue=purple, blue+yellow=green',3),
+       F('📅 Days & Time','foundation','Days of the week song; morning, afternoon, night',3),
+       F('✏️ Pre-Writing','foundation','Tracing letters of your name',3)],
+      // Thursday — Languages · Creative & Physical · Life Skills
+      [F('🗣️ Kiswahili Fun','kiswahili','Greetings (Hujambo, Habari) and counting 1-5 in Kiswahili',2,{ess:true}),
+       F('🌍 Language Songs','languages','Hello and colours in another language through a song',2),
+       F('🎨 Art & Creativity','art','Draw and colour freely; name the colours used',3,{pill:'c4'}),
+       F('🏃 Move & Play','pe','Animal walks, hopping, balance and ball games',3,{pill:'c4'}),
+       F('🧺 Helping at Home','lifeskills','Wash hands, tidy toys, pour water, set the table',3,{pill:'c4',ess:true}),
+       F('💛 Feelings & Friends','lifeskills','Name feelings, take turns, say please and thank you',3,{pill:'c4'})],
+      // Friday — Languages · Creative & Physical · Life Skills
+      [F('🗣️ Kiswahili Fun','kiswahili','Animals and family words: paka, mbwa, mama, baba',2,{ess:true}),
+       F('🎤 Story & Rhyme Time','speaking','Listen to a story and retell it in your own words',2),
+       F('🎶 Music & Movement','music','Songs, clapping rhythms, dancing',3,{pill:'c4'}),
+       F('🏃 Move & Play','pe','Obstacle course: crawl, jump, balance, throw and catch',3,{pill:'c4'}),
+       F('🩹 Staying Safe','firstaid','Who are my helpers? My home address, a parent\'s phone number, stranger safety',3,{pill:'c4',ess:true}),
+       F('🌈 Kindness & Manners','lifeskills','Sharing, kind words and being a good friend',3,{pill:'c4'})]
     ];
-    return fp[d%fp.length];
+    return layoutDay(fp[d%fp.length]);
   }
 
   // Science topic labels by grade
@@ -4382,41 +4443,116 @@ function getDayPlan(subjectGrades, dow, studentId){
   const geoTopics={1:"Simple maps & directions",2:"Weather & climate",3:"Kenya: maps & physical features",4:"Rivers, volcanoes & landforms",5:"Population & resources",6:"Climate zones & ecosystems",7:"Development & globalisation",8:"Geology & natural hazards",9:"Sustainability & future geography"};
   const finTopics={1:"Coins & needs vs wants",3:"Saving & budgeting",4:"What is a business?",5:"Budgeting & banking",6:"Business planning",7:"Investing & business basics",8:"Running a business",9:"Advanced financial literacy"};
 
-  // Each day has a completely unique subject pair — no subject repeats within the week
-  // Mon: Science (Biology) + Art
-  // Tue: History + Kiswahili
-  // Wed: Geography + Financial Literacy
-  // Thu: Science (Chemistry) + Music
-  // Fri: Science (Physics) + Public Speaking
-  const sciTopicBio  = sciTopics[scienceG]||"Biology — Living Things";
+  const sciTopicBio  = sciTopics[scienceG]||"Living Things";
   const sciTopicChem = scienceG<=4?"States of matter":scienceG<=6?"Separating mixtures":"Chemical reactions";
   const sciTopicPhys = scienceG<=2?"Push, pull & movement":scienceG<=4?"Forces & magnets":scienceG<=6?"Forces & motion":"Waves & energy transfer";
 
-  const day3=[
-    // Monday
-    [{time:"11:10",subject:"Science",subjectId:"science",topic:"Biology — "+sciTopicBio,priority:2,duration:"45 min",grade:scienceG},
-     {time:"12:00",subject:"🎨 Art & Design",subjectId:"art",topic:"Drawing from observation · Colour theory · Art history",priority:3,duration:"30 min",grade:mathsG}],
-    // Tuesday
-    [{time:"11:10",subject:"History",subjectId:"history",topic:histTopics[historyG]||"Historical enquiry",priority:3,duration:"45 min",grade:historyG},
-     {time:"12:00",subject:"🇰🇪 Kiswahili",subjectId:"kiswahili",topic:"Mazungumzo · Sarufi · Insha",priority:3,duration:"30 min",grade:mathsG}],
-    // Wednesday
-    [{time:"11:10",subject:"Geography",subjectId:"geography",topic:geoTopics[geoG]||"Maps & fieldwork",priority:3,duration:"45 min",grade:geoG},
-     {time:"12:00",subject:"💰 Financial Literacy",subjectId:"finance",topic:finTopics[financeG]||"Money & budgeting",priority:3,duration:"30 min",grade:financeG}],
-    // Thursday
-    [{time:"11:10",subject:"Science",subjectId:"science",topic:"Chemistry — "+sciTopicChem,priority:2,duration:"45 min",grade:scienceG},
-     {time:"12:00",subject:"🎵 Music",subjectId:"music",topic:"Rhythm · Notation · Ear Training · Singing",priority:3,duration:"30 min",grade:mathsG}],
-    // Friday
-    [{time:"11:10",subject:"Science",subjectId:"science",topic:"Physics — "+sciTopicPhys,priority:2,duration:"45 min",grade:scienceG},
-     {time:"12:00",subject:"🎤 Public Speaking",subjectId:"speaking",topic:"Mini-speech · Storytelling · Debate practice",priority:3,duration:"30 min",grade:mathsG}],
-  ];
+  // ── Mon–Wed: Core & Foundation — Maths, English, Science + History, Geography, ICT (6 × 30 min) ──
+  if(coreDay){
+    const sciFocus=['Biology -- '+sciTopicBio,'Chemistry -- '+sciTopicChem,'Physics -- '+sciTopicPhys][d];
+    return layoutDay([
+      {subject:"Mathematics",subjectId:"maths",topic:getMathsTopic(mathsG,studentId),priority:1,duration:"30 min",grade:mathsG,ess:true},
+      {subject:"English",subjectId:"english",topic:getEnglishTopic(englishG,studentId),priority:1,duration:"30 min",grade:englishG,ess:true},
+      {subject:"Science",subjectId:"science",topic:sciFocus,priority:2,duration:"30 min",grade:scienceG},
+      {subject:"History",subjectId:"history",topic:histTopics[historyG]||"Historical enquiry",priority:3,duration:"30 min",grade:historyG},
+      {subject:"Geography",subjectId:"geography",topic:geoTopics[geoG]||"Maps & fieldwork",priority:3,duration:"30 min",grade:geoG},
+      {subject:"💻 ICT & Computing",subjectId:"ict",topic:tOf('ict','Digital skills, typing & coding'),priority:3,duration:"30 min",grade:gOf('ict')}
+    ]);
+  }
 
-  // 9:00–12:30 schedule — 4 lessons, exactly 3h30min total
-  return[
-    {time:"09:00",subject:"Mathematics",subjectId:"maths",topic:getMathsTopic(mathsG,studentId),priority:1,duration:"60 min",grade:mathsG},
-    {time:"10:05",subject:"English",subjectId:"english",topic:getEnglishTopic(englishG,studentId),priority:1,duration:"60 min",grade:englishG},
-    ...(day3[d]||day3[0])
-  ];
+  // ── Thu–Fri: Languages · Creative & Physical · Life Skills (6 × 30 min) ──
+  const langTopic=tOf('languages','Modern Languages -- vocabulary & conversation');
+  if(d===3){
+    return layoutDay([
+      {subject:"🗣️ Kiswahili",subjectId:"kiswahili",topic:"Mazungumzo · Sarufi · Insha",priority:2,duration:"30 min",grade:gOf('kiswahili'),ess:true},
+      {subject:"🌍 Modern Languages",subjectId:"languages",topic:langTopic+' · vocabulary & greetings',priority:2,duration:"30 min",grade:gOf('languages')},
+      {subject:"🎨 Art & Design",subjectId:"art",topic:tOf('art','Drawing from observation · Colour theory · Art history'),priority:3,duration:"30 min",grade:gOf('art'),pill:'c4'},
+      {subject:"🏃 Physical Education",subjectId:"pe",topic:tOf('pe','Fitness, team games & traditional Kenyan games'),priority:3,duration:"30 min",grade:gOf('pe'),pill:'c4'},
+      {subject:"🏡 Life Skills & SEL",subjectId:"lifeskills",topic:tOf('lifeskills','Home & practical skills · Feelings & friendships'),priority:3,duration:"30 min",grade:gOf('lifeskills'),pill:'c4',ess:true},
+      {subject:"💰 Financial Literacy",subjectId:"finance",topic:finTopics[financeG]||"Money & budgeting",priority:3,duration:"30 min",grade:financeG,pill:'c4'}
+    ]);
+  }
+  return layoutDay([
+    {subject:"🌍 Modern Languages",subjectId:"languages",topic:langTopic+' · songs & conversation',priority:2,duration:"30 min",grade:gOf('languages'),ess:true},
+    {subject:"🎤 Public Speaking",subjectId:"speaking",topic:"Mini-speech · Storytelling · Debate practice",priority:2,duration:"30 min",grade:gOf('speaking')},
+    {subject:"🎵 Music",subjectId:"music",topic:tOf('music','Rhythm · Notation · Ear Training · Singing'),priority:3,duration:"30 min",grade:gOf('music'),pill:'c4'},
+    {subject:"🏃 Physical Education",subjectId:"pe",topic:tOf('pe','Fitness, team games & traditional Kenyan games'),priority:3,duration:"30 min",grade:gOf('pe'),pill:'c4',ess:true},
+    {subject:"🩹 First Aid & Safety",subjectId:"firstaid",topic:tOf('firstaid','Basic first aid & safety awareness'),priority:3,duration:"30 min",grade:gOf('firstaid'),pill:'c4'},
+    {subject:"🧠 Philosophy & Critical Thinking",subjectId:"philosophy",topic:tOf('philosophy','Big questions · Logic · Ethics · Debate'),priority:3,duration:"30 min",grade:gOf('philosophy'),pill:'c4'}
+  ]);
 }
+
+// ── SCHOOL / WEEK MODES ──
+// Every mode still teaches something real (never an empty day), follows the same day theme
+// (Mon–Wed core & foundation · Thu–Fri languages, creative & physical, life skills),
+// keeps lessons ≤ 30 min and puts a 15-min break after every 2 lessons.
+function applyScheduleMode(mode, base, dow, sg){
+  if(!mode || mode==='normal') return base;
+  const d=(dow===0||dow===6)?0:dow-1;
+  const coreDay=d<=2;
+  sg=sg||{};
+  const gm=sg.maths!==undefined?sg.maths:1;
+  const ge=sg.english!==undefined?sg.english:gm;
+  const gs=sg.science!==undefined?sg.science:gm;
+  const P=(subject,subjectId,topic,grade,priority,extra)=>Object.assign({subject,subjectId,topic,priority:priority||2,duration:'30 min',grade:grade===undefined?gm:grade},extra||{});
+
+  if(mode==='light'){
+    // Essentials only: Maths + English (Mon–Wed) · a language + a life/physical skill (Thu–Fri)
+    const ess=base.filter(s=>s.ess && s.priority>0);
+    return layoutDay(ess.length?ess:base.filter(s=>s.priority>0).slice(0,2));
+  }
+  if(mode==='cozy'){
+    return layoutDay(coreDay ? [
+      P('📖 Read-Aloud','english','Read aloud together -- chapter or picture book; talk about 3 new words',ge,1),
+      P('🎧 Maths Through Story','maths','Maths in stories, songs and everyday life: counting, patterns, shapes',gm,1),
+      P('🎬 Documentary Time','science','Nature or science video -- then tell 3 things you learned',gs,2),
+      P('🎨 Free Create','art','Draw, paint or build something about what you watched -- label it with new words',gm,3,{pill:'c4'})
+    ] : [
+      P('🗣️ Kiswahili Stories','kiswahili','Listen to a Kiswahili story or song -- learn 5 new words and say them aloud',gm,2),
+      P('🎶 Song Language Time','languages','Learn a short song in French, Arabic, Spanish or Mandarin',gm,2),
+      P('🎧 Listen & Draw','music','Listen to a piece of music or a story and draw what it makes you see',gm,3,{pill:'c4'}),
+      P('🏡 Cosy Life Skills','lifeskills','Do one home skill together (fold laundry, make a snack) and talk through each step',gm,3,{pill:'c4'})
+    ]);
+  }
+  if(mode==='out'){
+    return layoutDay(coreDay ? [
+      P('🌿 Outdoor Observation','science','Observe plants, animals and weather -- sketch and describe what you find',gs,2),
+      P('📏 Real-World Maths','maths','Count, measure, estimate and find shapes in the real world',gm,1),
+      P('🗣️ Oral Storytelling','english','Tell a story about what you saw today -- out loud or drawn',ge,1),
+      P('🗺️ Place & People Walk',['geography','history','geography'][d],
+        ['Draw a quick map of where you walked, with landmarks','Ask someone older how this place has changed over the years','Spot how people use the land: farms, shops, roads, homes'][d],gm,3)
+    ] : [
+      P('🗣️ Kiswahili Out & About','kiswahili','Name things you see in Kiswahili; greet people and ask politely for something',gm,2),
+      P('🍃 Nature Art','art','Collect leaves, stones or flowers -- sketch them or make a collage',gm,3,{pill:'c4'}),
+      P('🤸 Active Play','pe','Traditional Kenyan games, running, jumping and ball skills',gm,3,{pill:'c4'}),
+      d===3 ? P('🛒 Market Maths','finance','Plan a small budget, compare prices and count change',gm,3,{pill:'c4'})
+            : P('🚦 Safety Walk','firstaid','Road safety, safe places and who to ask for help',gm,3,{pill:'c4'})
+    ]);
+  }
+  if(mode==='project'){
+    return layoutDay(coreDay ? [
+      P('🧩 Project: Plan & Research','foundation','Choose one big question or thing to make -- plan it, list materials, find 3 facts',gm,1),
+      P('🔬 Project: Build & Experiment','foundation','Make it, test it, observe what happens -- take notes or photos',gm,1),
+      P('🔧 Project: Keep Building','foundation','Improve your work, fix problems and finish the main part',gm,1),
+      P('✍️ Project: Write It Up','english','Write or dictate what you made or discovered, using new words',ge,2),
+      P('📊 Project: Numbers & Measures','maths','Count, measure or chart something from your project',gm,2),
+      P('🎤 Present & Reflect','speaking','Show your project to the family -- what worked, what would you change?',gm,3)
+    ] : [
+      P('🧩 Project: Plan & Research','foundation','Choose one big idea to make or perform -- plan it and find 3 facts or examples',gm,1),
+      P('🎨 Project: Create','art','Make it: draw, build, sew, cook or compose',gm,2,{pill:'c4'}),
+      P('🔧 Project: Keep Creating','foundation','Improve your work and finish the main part',gm,1),
+      P('🗣️ Name It in Two Languages','kiswahili','Label your project in Kiswahili and one more language -- learn 5 new words',gm,2),
+      P('🏡 Project: Life Skills Link','lifeskills','How did you plan your time, share jobs or use money? List what you learned',gm,3,{pill:'c4'}),
+      P('🎤 Present & Reflect','speaking','Show your project to the family -- what worked, what would you change?',gm,3)
+    ]);
+  }
+  return base;
+}
+// Today's plan (respects the My Controls school mode) and the week-planner day plan (respects the week mode)
+function getTodaySessions(sg, dow){ return applyScheduleMode(schoolMode, getDayPlan(sg,dow), dow, sg); }
+function getWeekDayLessons(sg, dow){ return applyScheduleMode(weekMode, getDayPlan(sg,dow), dow, sg).filter(l=>l.priority>0); }
+// Index of a session among real lessons only (breaks don't count) — matches the week planner's lesson ids
+function realLessonIdx(sessions, i){ let n=0; for(let k=0;k<i && k<sessions.length;k++){ if(sessions[k].priority>0) n++; } return n; }
 
 function getDetailedLesson(subjectId,grade){
   const bySubject=LESSON_CONTENT[subjectId];
@@ -4547,10 +4683,10 @@ const CYCLE_ADVICE = {
 
 const SCHOOL_MODE_LABELS = {
   normal:  { icon:'📚', label:'Full Day',     desc:'All subjects · Full schedule · Normal pace' },
-  cozy:    { icon:'🛋', label:'Cozy Day',     desc:'Sofa school · Audiobooks · Documentaries · Read-alouds only' },
+  cozy:    { icon:'🛋', label:'Cozy Day',     desc:'Sofa school · Audiobooks · Documentaries · Read-alouds · Stories & songs -- gentle but still learning' },
   out:     { icon:'🌳', label:'Out Day',      desc:'Park · Library · Nature walk · Lighter schedule on the go' },
-  light:   { icon:'🌿', label:'Light Day',    desc:'Core subjects only (Maths + English) · 90 min total' },
-  project: { icon:'🔭', label:'Project Day',  desc:'One big project or experiment · No individual subjects' }
+  light:   { icon:'🌿', label:'Light Day',    desc:'Essentials only · Maths + English (Mon–Wed) · a language + a life or physical skill (Thu–Fri)' },
+  project: { icon:'🔭', label:'Project Day',  desc:'One big project · Plan, build, write, measure & present -- learning across subjects' }
 };
 
 function setSchoolMode(mode) {
@@ -4634,32 +4770,10 @@ function renderToday(){
     return;
   }
 
-  let sessions=getDayPlan(subjectGrades,now.getDay());
+  let sessions=getTodaySessions(subjectGrades,now.getDay());
 
-  // ── APPLY SCHOOL MODE FILTER ──
+  // -- SCHOOL MODE (cozy / light / out / project) is applied inside getTodaySessions --
   const modeInfo = SCHOOL_MODE_LABELS[schoolMode] || SCHOOL_MODE_LABELS.normal;
-  if (schoolMode === 'cozy') {
-    sessions = [
-      {time:'09:00',subject:'📖 Read-Aloud',subjectId:'english',topic:'Read aloud together — choose a chapter book or picture books',priority:1,duration:'45 min',grade:subjectGrades.english},
-      {time:'09:50',subject:'🎧 Maths Audiovisual',subjectId:'maths',topic:'Maths through story: counting, patterns, numbers in everyday life',priority:1,duration:'30 min',grade:subjectGrades.maths},
-      {time:'10:25',subject:'📺 Documentary Time',subjectId:'science',topic:'Nature documentary or science video — discuss what you watched',priority:2,duration:'40 min',grade:subjectGrades.science},
-      {time:'11:10',subject:'🎨 Free Create',subjectId:'art',topic:'Draw, paint, craft, or build freely — no instructions today',priority:3,duration:'30 min',grade:subjectGrades.maths},
-    ];
-  } else if (schoolMode === 'light') {
-    sessions = sessions.filter(s => s.subjectId === 'maths' || s.subjectId === 'english');
-    sessions = sessions.map(s => ({...s, duration: '50 min', topic: s.topic + ' (shorter session)'}));
-  } else if (schoolMode === 'out') {
-    sessions = [
-      {time:'09:00',subject:'🌳 Outdoor Observation',subjectId:'science',topic:'Observe plants, animals, weather — sketch and describe what you find',priority:1,duration:'60 min',grade:subjectGrades.science},
-      {time:'10:05',subject:'📍 Real-World Maths',subjectId:'maths',topic:'Count, measure, estimate, find shapes in the real world',priority:1,duration:'30 min',grade:subjectGrades.maths},
-      {time:'10:40',subject:'📖 Oral Storytelling',subjectId:'english',topic:'Tell a story about what you saw today — orally or drawn',priority:2,duration:'30 min',grade:subjectGrades.english},
-    ];
-  } else if (schoolMode === 'project') {
-    sessions = [
-      {time:'09:00',subject:'🔭 Project Block',subjectId:'foundation',topic:'Today is a project day — one big thing, all morning',priority:1,duration:'120 min',grade:subjectGrades.maths},
-      {time:'11:05',subject:'📓 Document & Present',subjectId:'english',topic:'Write, draw or speak about what you made or discovered',priority:2,duration:'45 min',grade:subjectGrades.english},
-    ];
-  }
 
   // Show mode banner at top of schedule if not normal
   const schEl = document.getElementById('today-schedule');
@@ -4735,7 +4849,7 @@ function renderToday(){
       <div class="sch-bar" style="background:${colors[sess.priority]||'var(--border)'}"></div>
       <div class="sch-time">${freeFlowMode?'':''+sess.time}</div>
       <div class="sch-info">
-        <div class="sch-subject">${sess.subject}${sess.priority===1?'<span class="badge b-core">Core</span>':''} ${isActive?'<span class="active-lesson-badge">▶ Now</span>':''} <span style="font-size:.65rem;opacity:.6;font-weight:400">${gMeta.label}</span></div>
+        <div class="sch-subject">${sess.subject}${sess.priority===1?'<span class="badge b-core">Core</span>':''} ${isActive?'<span class="active-lesson-badge">▶ Now</span>':''} ${isBreak?'':`<span style="font-size:.65rem;opacity:.6;font-weight:400">${gMeta.label}</span>`}</div>
         <div class="sch-topic">${sess.topic}</div>
       </div>
       <div class="sch-dur">${sess.duration}</div>
@@ -4808,7 +4922,7 @@ function renderToday(){
   // Update summary stat cards
   const doneCount=[...completedSessions].filter(k=>k.startsWith(`d-${now.toDateString()}-${currentStudentId}`)).length;
   const streak=calcStreak(currentStudentId);
-  const minutesStudied = doneCount * 50; // rough estimate
+  const minutesStudied = doneCount * 30; // rough estimate
   const hoursStr = minutesStudied >= 60 ? (minutesStudied/60).toFixed(1)+'h' : minutesStudied+'m';
   const tsD=document.getElementById('ts-done');const tsT=document.getElementById('ts-time');const tsS=document.getElementById('ts-streak');
   if(tsD) tsD.textContent=doneCount;
@@ -4849,7 +4963,7 @@ function toggleDone(sid,el){
   // We find the session in today's plan to get its subjectId
   const _now = new Date();
   const _sg = {maths:getStudentGradeForSubject(currentStudentId,'maths'),english:getStudentGradeForSubject(currentStudentId,'english'),science:getStudentGradeForSubject(currentStudentId,'science'),history:getStudentGradeForSubject(currentStudentId,'history'),geography:getStudentGradeForSubject(currentStudentId,'geography'),finance:getStudentGradeForSubject(currentStudentId,'finance')};
-  const _sessions = getDayPlan(_sg, _now.getDay());
+  const _sessions = getTodaySessions(_sg, _now.getDay());
   const _sessIdx = parseInt((sid.split('-').pop()));
   const _sess = _sessions[_sessIdx];
   const _subjectId = _sess ? _sess.subjectId : null;
@@ -4874,7 +4988,7 @@ function toggleDone(sid,el){
     // Celebration!
     const now2=new Date();
     const sg2=_sg;
-    const allSess=getDayPlan(sg2,now2.getDay()).filter(s=>s.priority>0);
+    const allSess=getTodaySessions(sg2,now2.getDay()).filter(s=>s.priority>0);
     const doneNow=[...completedSessions].filter(k=>k.startsWith(`d-${now2.toDateString()}-${currentStudentId}`)).length;
     if(doneNow===allSess.length){
       showCelebration('🏆','Day Complete!','Every session done — what a fantastic day of learning!');
@@ -4885,12 +4999,12 @@ function toggleDone(sid,el){
   saveState();
   const now=new Date();
   const sg={maths:getStudentGradeForSubject(currentStudentId,'maths'),english:getStudentGradeForSubject(currentStudentId,'english'),science:getStudentGradeForSubject(currentStudentId,'science'),history:getStudentGradeForSubject(currentStudentId,'history'),geography:getStudentGradeForSubject(currentStudentId,'geography'),finance:getStudentGradeForSubject(currentStudentId,'finance')};
-  const sessions=getDayPlan(sg,now.getDay());
+  const sessions=getTodaySessions(sg,now.getDay());
   updateProg(sessions,now);
   // Update summary cards
   const doneCount=[...completedSessions].filter(k=>k.startsWith(`d-${now.toDateString()}-${currentStudentId}`)).length;
   const streak=calcStreak(currentStudentId);
-  const minutesStudied = doneCount * 50;
+  const minutesStudied = doneCount * 30;
   const hoursStr = minutesStudied >= 60 ? (minutesStudied/60).toFixed(1)+'h' : minutesStudied+'m';
   const tsD=document.getElementById('ts-done');const tsT=document.getElementById('ts-time');const tsS=document.getElementById('ts-streak');
   if(tsD) tsD.textContent=doneCount;
@@ -5412,7 +5526,7 @@ function updateProg(sessions,now){
   const pct=total>0?Math.min(100,Math.round(done/total*100)):0;
   document.getElementById('prog-count').textContent=`${done} / ${total} done`;
   document.getElementById('prog-fill').style.width=pct+'%';
-  document.getElementById('prog-dots').innerHTML=sessions.map((s,i)=>`<div class="prog-dot${s.priority>0&&completedSessions.has(`d-${now.toDateString()}-${currentStudentId}-${i}`)?' done':''}${s.priority===1?' core':''}"></div>`).join('');
+  document.getElementById('prog-dots').innerHTML=sessions.map((s,i)=>s.priority===0?'':`<div class="prog-dot${s.priority>0&&completedSessions.has(`d-${now.toDateString()}-${currentStudentId}-${i}`)?' done':''}${s.priority===1?' core':''}"></div>`).join('');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -5560,7 +5674,7 @@ function renderWeek(){
   carryNotice.style.display = 'none';
 
   // Stats
-  const allAutoLessons = [0,1,2,3,4].flatMap(i=>getDayPlan(subjectGrades,i+1).filter(l=>l.priority>0));
+  const allAutoLessons = [0,1,2,3,4].flatMap(i=>getWeekDayLessons(subjectGrades,i+1));
   const totalLessons = allAutoLessons.length + Object.values(weekCustomLessons).flat().length;
   const coreLessons  = allAutoLessons.filter(l=>l.priority===1).length;
   const sciLessons   = allAutoLessons.filter(l=>l.subjectId==='science').length;
@@ -5569,11 +5683,12 @@ function renderWeek(){
   for(let i=0;i<5;i++){
     const d2=new Date(mon);d2.setDate(mon.getDate()+i);
     const dateStr=wkDateStr(d2);
-    const lessons=getDayPlan(subjectGrades,i+1).filter(l=>l.priority>0);
+    const lessons=getWeekDayLessons(subjectGrades,i+1);
     lessons.forEach((l,idx)=>{ if(weekDoneLessons.has(wkSessionId(dateStr,l.subjectId,idx))) weekDoneCount++; });
     (weekCustomLessons[dateStr]||[]).forEach((l,idx)=>{ if(weekDoneLessons.has(wkSessionId(dateStr,l.subjectId,900+idx))) weekDoneCount++; });
   }
-  const estHours = mathsG===0?'10h':mathsG<=3?'14h':mathsG<=6?'18h':'22h';
+  const _wkMins = allAutoLessons.reduce((a,l)=>a+_durMins(l.duration),0);
+  const estHours = (Math.round(_wkMins/6)/10)+'h';
   document.getElementById('week-stats').innerHTML=`
     <div class="wstat"><div class="wstat-num">${coreLessons}</div><div class="wstat-lbl">Core Sessions</div></div>
     <div class="wstat"><div class="wstat-num">${sciLessons}</div><div class="wstat-lbl">Science Sessions</div></div>
@@ -5591,24 +5706,11 @@ function renderWeek(){
     const dateStr = wkDateStr(d);
 
     // Auto lessons for this day
-    let autoLessons = getDayPlan(subjectGrades, i+1).filter(l=>l.priority>0);
+    let autoLessons = getWeekDayLessons(subjectGrades, i+1);
 
-    // Apply week mode filter
-    if(weekMode==='light'){
-      autoLessons = autoLessons.filter(l=>l.subjectId==='maths'||l.subjectId==='english');
-    } else if(weekMode==='cozy'){
-      autoLessons = [
-        {time:'09:00',subject:'📖 Read-Aloud',subjectId:'english',topic:'Read aloud together — chapter book or picture book',priority:1,duration:'45 min',grade:subjectGrades.english},
-        {time:'09:50',subject:'🎧 Audio Maths',subjectId:'maths',topic:'Maths through story, counting, patterns in everyday life',priority:1,duration:'30 min',grade:subjectGrades.maths},
-        {time:'10:25',subject:'📺 Documentary',subjectId:'science',topic:'Nature or science video — discuss what you watched',priority:2,duration:'40 min',grade:subjectGrades.science},
-      ];
-    } else if(weekMode==='out'){
-      autoLessons = [
-        {time:'09:00',subject:'🌳 Outdoor Observation',subjectId:'science',topic:'Observe plants, animals, weather in the real world',priority:2,duration:'60 min',grade:subjectGrades.science},
-        {time:'10:05',subject:'📍 Real-World Maths',subjectId:'maths',topic:'Count, measure, estimate, find shapes outside',priority:1,duration:'30 min',grade:subjectGrades.maths},
-        {time:'10:40',subject:'📖 Oral Storytelling',subjectId:'english',topic:'Tell a story about what you saw today',priority:1,duration:'30 min',grade:subjectGrades.english},
-      ];
-    }
+    // Week mode (normal / light / cozy / out) is applied inside getWeekDayLessons
+    // -- every mode still includes real learning, ≤30 min per lesson
+    // (autoLessons already comes from getWeekDayLessons above)
 
     // Custom lessons for this day
     const customLessons = weekCustomLessons[dateStr] || [];
@@ -5629,7 +5731,7 @@ function renderWeek(){
       const sid = wkSessionId(dateStr, lesson.subjectId, isCustom ? 900+idx : (isCarried ? 800+idx : idx));
       const done = weekDoneLessons.has(sid);
       const gm = GRADE_META[lesson.grade] || {};
-      const cls = lesson.priority===1?'c1':lesson.priority===2?'c2':isCustom?'custom-pill':'c3';
+      const cls = lesson.pill || (lesson.priority===1?'c1':lesson.priority===2?'c2':isCustom?'custom-pill':'c3');
       const carriedMark = isCarried ? '🔁 ' : '';
       const modeName = lesson.mode && lesson.mode!=='normal' ? `<span style="font-size:.55rem;opacity:.7;margin-left:3px">[${lesson.mode}]</span>` : '';
       const hasEdit = !!lessonEdits[sid];
@@ -5643,7 +5745,7 @@ function renderWeek(){
       </div>`;
     }
 
-    const autoPills = autoLessons.map((l,idx)=>pillHtml(l,idx,false,false)).join('');
+    const autoPills = autoLessons.map((l,idx)=>pillHtml(l,idx,false,false)+((idx%2===1 && idx<autoLessons.length-1)?'<div class="day-break">☕ 15-min break</div>':'')).join('');
     const customPills = customLessons.map((l,idx)=>pillHtml(l,idx,true,false)).join('');
     const carriedPills = dayCarried.map((l,idx)=>pillHtml(l,idx,false,true)).join('');
 
@@ -5694,7 +5796,7 @@ function openWkLessonModal(dateStr, subjectId, lessonIdx, isCustom, isCarried){
     const dayCarried = carried.filter((_,ci)=>ci%5===dayIdx);
     lesson = dayCarried[lessonIdx-800];
   } else {
-    const autoLessons = getDayPlan(subjectGrades, dow).filter(l=>l.priority>0);
+    const autoLessons = getWeekDayLessons(subjectGrades, dow);
     lesson = autoLessons[lessonIdx];
   }
   if(!lesson) return;
@@ -5702,7 +5804,7 @@ function openWkLessonModal(dateStr, subjectId, lessonIdx, isCustom, isCarried){
   wkModalLesson = { dateStr, subjectId, lessonIdx, isCustom, isCarried, lesson };
 
   // Subject badge
-  const colorMap={maths:'var(--sky)',english:'var(--terra)',science:'var(--forest-mid)',geography:'var(--olive)',history:'var(--gold)',finance:'#1A6B2C',art:'var(--plum)',pe:'var(--rose)',kiswahili:'var(--terra)',music:'var(--plum)',character:'var(--gold)',speaking:'var(--sky)',logic:'var(--teal)',foundation:'var(--plum)'};
+  const colorMap={maths:'var(--sky)',english:'var(--terra)',science:'var(--forest-mid)',geography:'var(--olive)',history:'var(--gold)',finance:'#1A6B2C',art:'var(--plum)',pe:'var(--rose)',kiswahili:'var(--terra)',music:'var(--plum)',character:'var(--gold)',speaking:'var(--sky)',logic:'var(--teal)',foundation:'var(--plum)',ict:'var(--sky)',lifeskills:'var(--teal)',languages:'var(--indigo)',firstaid:'var(--rose)',philosophy:'var(--plum)'};
   const c = colorMap[subjectId]||'var(--bark)';
   const subj = CURRICULUM.find(s=>s.id===subjectId);
 
@@ -7644,20 +7746,6 @@ function exportTodayPlan(){
   </head><body><h1>${student?.name||'Student'} — Today's Learning Plan</h1>
   <p>${new Date().toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>
   ${schedule}
-  <!-- ── FLAG REASON MODAL ── -->
-<div id="flag-reason-overlay" class="hidden">
-  <div id="flag-reason-modal">
-    <div class="frm-title">🚩 Red Flag — Add Reason</div>
-    <div class="frm-subtitle" id="frm-checkpoint-label"></div>
-    <label class="frm-label" for="flag-reason-text">Why are you flagging this?</label>
-    <textarea id="flag-reason-text" placeholder="e.g. Struggles with the concept of carrying in column addition. Gets confused when there are two carries in one sum. Needs more practice with visual manipulatives…" maxlength="400"></textarea>
-    <div class="frm-char-hint"><span id="frm-char-count">0</span>/400</div>
-    <div class="frm-btn-row">
-      <button class="btn btn-ghost" onclick="closeFlagReasonModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveFlagReason()" style="background:var(--terra)">🚩 Save Flag &amp; Reason</button>
-    </div>
-  </div>
-</div>
 </body></html>`;
   const blob=new Blob([html],{type:'text/html'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
@@ -8757,7 +8845,7 @@ function toggleDone(sid, el){
   // Show tomorrow prep after 80% done
   const now = new Date();
   const subjectGrades={maths:getStudentGradeForSubject(currentStudentId,'maths'),english:getStudentGradeForSubject(currentStudentId,'english'),science:getStudentGradeForSubject(currentStudentId,'science'),history:getStudentGradeForSubject(currentStudentId,'history'),geography:getStudentGradeForSubject(currentStudentId,'geography'),finance:getStudentGradeForSubject(currentStudentId,'finance')};
-  const sessions = getDayPlan(subjectGrades, now.getDay()).filter(s=>s.priority>0);
+  const sessions = getTodaySessions(subjectGrades, now.getDay()).filter(s=>s.priority>0);
   const doneCount = [...completedSessions].filter(k=>k.startsWith(`d-${now.toDateString()}-${currentStudentId}`)).length;
   if(doneCount >= Math.ceil(sessions.length * 0.7)){
     renderTomorrowPrepPanel();
@@ -8772,13 +8860,14 @@ function injectTodayLessonExtras(){
   const now = new Date();
   if(!currentStudentId) return;
   const subjectGrades={maths:getStudentGradeForSubject(currentStudentId,'maths'),english:getStudentGradeForSubject(currentStudentId,'english'),science:getStudentGradeForSubject(currentStudentId,'science'),history:getStudentGradeForSubject(currentStudentId,'history'),geography:getStudentGradeForSubject(currentStudentId,'geography'),finance:getStudentGradeForSubject(currentStudentId,'finance')};
-  const sessions = getDayPlan(subjectGrades, now.getDay());
+  const sessions = getTodaySessions(subjectGrades, now.getDay());
 
   sessions.forEach((sess, i)=>{
     if(sess.priority===0) return;
     const sid = `d-${now.toDateString()}-${currentStudentId}-${i}`;
-    const all = document.querySelectorAll('.sch-body');
-    const body = all[i] || null;
+    // find this lesson's body by its own timer (robust to break rows and free-flow re-ordering)
+    const _tw = document.getElementById('timer-wrap-'+sid);
+    const body = _tw ? _tw.closest('.sch-body') : null;
 
     if(!body) return;
 
@@ -8795,7 +8884,7 @@ function injectTodayLessonExtras(){
 
     // Inject edited lesson content if available
     const dateStr = now.toISOString().slice(0,10);
-    const wkSid = wkSessionId(dateStr, sess.subjectId, i);
+    const wkSid = wkSessionId(dateStr, sess.subjectId, realLessonIdx(sessions, i));
     const edits = lessonEdits[wkSid];
     if(edits){
       const existingBox = body.querySelector('.lesson-detail-box');
@@ -8837,10 +8926,10 @@ function openTodayLessonEditor(subjectId, sessionIdx){
     geography:getStudentGradeForSubject(currentStudentId,'geography'),
     finance:getStudentGradeForSubject(currentStudentId,'finance'),
   };
-  const sessions = getDayPlan(subjectGrades, now.getDay());
+  const sessions = getTodaySessions(subjectGrades, now.getDay());
   const sess = sessions[sessionIdx];
   if(!sess) return;
-  wkModalLesson = { dateStr, subjectId, lessonIdx: sessionIdx, isCustom: false, isCarried: false, lesson: sess };
+  wkModalLesson = { dateStr, subjectId, lessonIdx: realLessonIdx(sessions, sessionIdx), isCustom: false, isCarried: false, lesson: sess };
   openLessonEditor();
 }
 
@@ -9700,7 +9789,7 @@ function renderCafeLessonPanel(){
         try{ sg[s] = typeof getStudentGradeForSubject==='function' ? getStudentGradeForSubject(currentStudentId,s) : 1; }catch(e){ sg[s]=1; }
       });
       const dow = new Date().getDay();
-      if(dow>=1 && dow<=5) lessons = getDayPlan(sg, dow, currentStudentId) || [];
+      if(dow>=1 && dow<=5) lessons = (getDayPlan(sg, dow, currentStudentId) || []).filter(l=>l.priority>0);
     }
   }catch(e){}
   if(!lessons.length){
@@ -9735,7 +9824,7 @@ window.cafeAutoFillToday = function(){
         try{ sg[s] = typeof getStudentGradeForSubject==='function' ? getStudentGradeForSubject(currentStudentId,s) : 1; }catch(e){ sg[s]=1; }
       });
       const dow = new Date().getDay();
-      if(dow>=1&&dow<=5) lessons = getDayPlan(sg,dow,currentStudentId)||[];
+      if(dow>=1&&dow<=5) lessons = (getDayPlan(sg,dow,currentStudentId)||[]).filter(l=>l.priority>0);
     }
   }catch(e){}
   if(!lessons.length){ alert('No lessons found. Make sure you\'re logged in as a student.'); return; }
@@ -12517,5 +12606,20 @@ setTimeout(plcInjectButton, 500);
 
 })();
 </script>
+
+  <!-- ── FLAG REASON MODAL ── -->
+<div id="flag-reason-overlay" class="hidden">
+  <div id="flag-reason-modal">
+    <div class="frm-title">🚩 Red Flag — Add Reason</div>
+    <div class="frm-subtitle" id="frm-checkpoint-label"></div>
+    <label class="frm-label" for="flag-reason-text">Why are you flagging this?</label>
+    <textarea id="flag-reason-text" placeholder="e.g. Struggles with the concept of carrying in column addition. Gets confused when there are two carries in one sum. Needs more practice with visual manipulatives…" maxlength="400"></textarea>
+    <div class="frm-char-hint"><span id="frm-char-count">0</span>/400</div>
+    <div class="frm-btn-row">
+      <button class="btn btn-ghost" onclick="closeFlagReasonModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveFlagReason()" style="background:var(--terra)">🚩 Save Flag &amp; Reason</button>
+    </div>
+  </div>
+</div>
 
 </body>
